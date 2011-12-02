@@ -35,7 +35,8 @@ class RepoAddForm(forms.Form):
     cksum = forms.ChoiceField(label="Checksum Type",
                               initial="sha1",
                               choices=[("sha1", "sha1"),
-                                       ("sha256", "sha256")])
+                                       ("sha256", "sha256")],
+                              help_text="Select 'sha1' for the checksum type for all SLES distros, RHEL/CentOS 5 or earlier, and Fedora 12 and earlier. For RHEL/CentOS 6 and Fedora >= 13, pick 'sha256.' If in doubt, use 'sha1.'")
     gpgkeys = \
         forms.CharField(label="GPG Keys",
                         required=False,
@@ -101,11 +102,15 @@ class RepoEditForm(RepoEditBase):
     def extra_fields(self):
         self.fields['name'] = forms.CharField(label="Name",
                                               initial=self.repo['name'])
-        self.fields['id'] = \
-            forms.CharField(label="ID",
-                            required=False,
-                            initial=self.repo['id'],
-                            widget=DisplayWidget())
+        self.fields['id'] = forms.CharField(label="ID",
+                                            required=False,
+                                            initial=self.repo['id'],
+                                            widget=DisplayWidget())
+
+        self.fields['cksum'] = forms.ChoiceField(label="Checksum Type",
+                                                 initial="sha1",
+                                                 choices=[("sha1", "sha1"),
+                                                          ("sha256", "sha256")])
 
         self.fields['gpgkeys'] = \
             forms.CharField(initial="\n".join(self.repo['keys'].values()),

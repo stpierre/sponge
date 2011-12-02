@@ -38,10 +38,6 @@
       </td>
     </tr>
     <tr>
-      <th>Packages</th><td>{{ repo.package_count }}</td>
-      <th>Architecture</th><td>{{ repo.arch }}</td>
-    </tr>
-    <tr>
       <th>Last Sync</th>
       <td>
         {% if repo.last_sync %}
@@ -58,6 +54,16 @@
           Never
         {% endif %}
       </td>
+    </tr>
+    <tr>
+      <th>Architecture</th><td>{{ repo.arch }}</td>
+      <th>Checksum Type</th>
+      <td>
+        <div class="field checkboxSelect">{{ editform.cksum }}
+          <div class="fieldErrors">{{ editform.cksum.errors }}</div>
+          <div class="helpText">{{ editform.cksum.help_text }}</div>
+        </div>
+        </td>
     </tr>
     <tr>
       <th>Filters</th>

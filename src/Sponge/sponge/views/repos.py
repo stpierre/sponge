@@ -39,14 +39,15 @@ def view(request, repo_id=None):
             if editform.cleaned_data['name'] != repo['name']:
                 try:
                     repoapi.update(repo['id'],
-                                   dict(name=editform.cleaned_data['name']))
+                                   dict(name=editform.cleaned_data['name'],
+                                        checksum_type=editform.cleaned_data['cksum']))
                     messages.debug(request,
                                    "Updated repository name for %s" %
                                    repo['id'])
                 except ServerRequestError, err:
                     success = False
                     messages.error(request,
-                                   "Could not update repository name for %s: "
+                                   "Could not update repository info for %s: "
                                    "%s" % (repo['id'], err[1]))
 
             groups = filter(lambda s: s != '',
