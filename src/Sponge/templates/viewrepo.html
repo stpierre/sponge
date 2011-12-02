@@ -129,13 +129,19 @@
 </form>
 </div>
 
+{% if packages %}
 <h2>Packages</h2>
+{% else %}
+No packages
+{% endif %}
+
 {% endblock beforetable %}
 
-{% if packages %}
 {% block tablehead %}
+{% if packages %}
 <th>Package</th>
 <th>Actions</th>
+{% endif %}
 {% endblock tablehead %}
 
 {% block tablebody %}
@@ -151,12 +157,5 @@
     {% endif %}
   </td>
 </tr>
+{% endfor %}
 {% endblock tablebody %}
-
-{% else %}
-
-{% block table %}
-No packages
-{% endblock table %}
-
-{% endif %}
