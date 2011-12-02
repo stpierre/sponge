@@ -15,7 +15,8 @@ MANAGERS = ADMINS
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3', # Add 'postgresql_psycopg2', 'postgresql', 'mysql', 'sqlite3' or 'oracle'.
-        'NAME': '/ccs/home/stpierre/Sponge/sponge.sqlite',                      # Or path to database file if using sqlite3.
+        'NAME': os.path.join(os.path.abspath(os.path.dirname(__file__)),
+                             'sponge.sqlite'),                      # Or path to database file if using sqlite3.
         'USER': '',                      # Not used with sqlite3.
         'PASSWORD': '',                  # Not used with sqlite3.
         'HOST': '',                      # Set to empty string for localhost. Not used with sqlite3.
@@ -117,7 +118,8 @@ AUTHENTICATION_BACKENDS = ['sponge.backend.PulpAuthentication']
 REQUIRE_LOGIN_PATH = "/login/"
 LOGIN_REDIRECT_URL = "/"
 
-PULP_CERTIFICATE_PATH = "ccs/home/stpierre/Sponge/certs"
+PULP_CERTIFICATE_PATH = os.path.join(os.path.abspath(os.path.dirname(__file__)),
+                                     "certs")
 
 MESSAGE_STORAGE = 'django.contrib.messages.storage.session.SessionStorage'
 
