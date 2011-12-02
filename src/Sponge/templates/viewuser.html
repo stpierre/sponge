@@ -1,0 +1,9 @@
+{% extends "formbase.html" %}
+{% block title %}Edit user "{{ user.name }}"{% endblock %}
+{% block pagetitle %}Edit user "{{ user.name }}"{% endblock %}
+
+{% block actions %}
+<li><a href="{% url sponge.views.users.delete login=user.login %}">delete</a></li>
+{% endblock %}
+
+{% block formcancelurl %}{% url sponge.views.users.list %}{% endblock %}

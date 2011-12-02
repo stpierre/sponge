@@ -1,0 +1,8 @@
+{% extends "formbase.html" %}
+{% block title %}Promote packages to {{ repo.name }}{% endblock %}
+{% block pagetitle %}Promote packages to {{ repo.name }}{% endblock %}
+
+{% block formdescription %}Promote the following packages from "{{ repo.parent.name }}" to "{{ repo.name }}":{% endblock %}
+
+{% block formsubmit %}Promote{% endblock %}
+{% block formcancelurl %}{% url sponge.views.repos.view repo_id=repo.id %}{% endblock %}

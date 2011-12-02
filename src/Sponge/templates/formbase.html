@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+
+{% block content %}
+{% block formdescription %}<p></p>{% endblock formdescription %}
+
+<div class="form">
+  {{ form.non_field_errors }}
+  <form action="{% block formaction %}{% endblock formaction %}" method="post">
+  {% for hidden in form.hidden_fields %}
+    {{ hidden }}
+  {% endfor %}
+  {% csrf_token %}
+  {% for field in form.visible_fields %}
+<div class="field
+  {% if field.field.widget.input_type %}
+    input{{ field.field.widget.input_type|title }}
+  {% else %}
+    {% if "checkboxselectmultiple" in field.field.widget|lower %}
+      checkboxSelect
+    {% endif %}
+  {% endif %}">
+    <label for="{{ field.html_name }}"{% if field.field.required %} class="required"><span class="required">*</span>{% else %}>{% endif %}{{ field.label }}</label> {{ field }}
+    <div class="fieldErrors">{{ field.errors }}</div>
+    <div class="helpText">{{ field.help_text }}</div>
+  </div>
+{% endfor %}
+{% block formextra %}{% endblock formextra %}
+<p>
+  <div class="formButtons">
+    <button type="submit">{% block formsubmit %}Submit{% endblock formsubmit %}</button>
+    {% block cancel %}<a href="{% block formcancelurl %}{% url sponge.views.repos.list %}{% endblock formcancelurl%}"><button>{% block formcancel %}Cancel{% endblock formcancel %}</button></a>{% endblock cancel %}
+  </div>
+</p>
+</form>
+</div>
+{% endblock content %}

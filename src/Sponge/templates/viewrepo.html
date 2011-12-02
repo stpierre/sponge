@@ -1,0 +1,162 @@
+{% extends "tablebase.html" %}
+{% block title %}{{ repo.name }}{% endblock %}
+{% block pagetitle %}{{ repo.name }}{% endblock %}
+
+{% load iso8601 %}
+
+{% block actions %}
+<li><a href="{% url sponge.views.repos.sync repo_id=repo.id %}?next={% url sponge.views.repos.view repo_id=repo.id %}">Sync</a></li>
+<li><a href="{% url sponge.views.repos.rebuild_metadata repo_id=repo.id %}?next={% url sponge.views.repos.view repo_id=repo.id %}">Rebuild metadata</a></li>
+<li><a href="{% url sponge.views.repos.clone repo_id=repo.id %}">Clone</a></li>
+<li><a href="{% url sponge.views.repos.delete repo_id=repo.id %}">Delete</a></li>
+<li><form action="" method="post">{% csrf_token %}Diff with {{ diffform.repo2 }} <button type="submit" name="diffselect">Diff</button></form></li>
+{% endblock actions %}
+
+{% block beforetable %}
+<div class="form">
+  {{ form.non_field_errors }}
+  <form action="" method="post">
+  {% for hidden in form.hidden_fields %}
+    {{ hidden }}
+  {% endfor %}
+  {% csrf_token %}
+  <table>
+    <tr>
+      <th>Name</th>
+      <td>
+        <div class="field inputText">{{ editform.name }}
+          <div class="fieldErrors">{{ editform.name.errors }}</div>
+          <div class="helpText">{{ editform.name.help_text }}</div>
+        </div>
+      </td>
+      <th>ID</th>
+      <td>
+        <div class="field inputText">{{ editform.id }}
+          <div class="fieldErrors">{{ editform.id.errors }}</div>
+          <div class="helpText">{{ editform.id.help_text }}</div>
+        </div>
+      </td>
+    </tr>
+    <tr>
+      <th>Packages</th><td>{{ repo.package_count }}</td>
+      <th>Architecture</th><td>{{ repo.arch }}</td>
+    </tr>
+    <tr>
+      <th>Last Sync</th>
+      <td>
+        {% if repo.last_sync %}
+          {{ repo.last_sync|iso8601date:"SHORT_DATETIME_FORMAT" }}
+        {% else %}
+          Never
+        {% endif %}
+      </td>
+      <th>Next Sync</th>
+      <td>
+        {% if repo.next_sync %}
+          {{ repo.next_sync|iso8601date:"SHORT_DATETIME_FORMAT" }}
+        {% else %}
+          Never
+        {% endif %}
+      </td>
+    </tr>
+    <tr>
+      <th>Filters</th>
+      <td>
+        <div class="field checkboxSelect">{{ editform.filters }}
+          <div class="fieldErrors">{{ editform.filters.errors }}</div>
+          <div class="helpText">{{ editform.filters.help_text }}</div>
+        </div>
+      </td>
+      <th>Groups</th>
+      <td>
+        <div class="field checkboxSelect">{{ editform.groups }}
+          <div class="fieldErrors">{{ editform.groups.errors }}</div>
+          <div class="helpText">{{ editform.groups.help_text }}</div>
+        </div>
+        <div class="field inputText">{{ editform.newgroups }}
+          <div class="fieldErrors">{{ editform.newgroups.errors }}</div>
+          <div class="helpText">{{ editform.newgroups.help_text}}</div>
+        </div>
+      </td>
+  <tr>
+    <th>URL</th>
+    <td colspan="3">
+      <a href="{{ repo.url }}" target="new">{{ repo.url }}</a>
+    </td>
+  </tr>
+  <tr>
+    <th>Source</th>
+    <td colspan="3">
+      {% if repo.source.type == "remote" %}
+        <a href="{{ repo.source.url }}" target="new">{{ repo.source.url }}</a>
+      {% else %}
+        {% if repo.parent %}
+          <a href="{% url sponge.views.repos.view repo_id=repo.parent.id %}">{{ repo.parent.name }}</a>
+        {% else %}
+          {{ repo.source.url }}
+        {% endif %}
+      {% endif %}
+    </td>
+  </tr>
+  <tr>
+    <th>Clones</th>
+    <td colspan="3">
+      {% if repo.children %}
+        {% for child in repo.children %}
+          <a href="{% url sponge.views.repos.view repo_id=child.id %}">{{ child.name }}</a><br />
+        {% endfor %}
+      {% else %}
+        None
+      {% endif %}
+    </td>
+  </tr>
+  <tr>
+    <th>GPG Keys</th>
+    <td colspan="3">
+      <div class="field">{{ editform.gpgkeys }}
+        <div class="fieldErrors">{{ editform.gpgkeys.errors }}</div>
+        <div class="helpText">{{ editform.gpgkeys.help_text}}</div>
+      </div>
+    </td>
+  </tr>
+</table>
+<p>
+<div class="formButtons">
+  <button type="submit" name="repoedit">Submit Changes</button>
+  <a href="{% url sponge.views.repos.list %}"><button>Cancel</button></a>
+</div>
+</p>
+</form>
+</div>
+
+<h2>Packages</h2>
+{% endblock beforetable %}
+
+{% if packages %}
+{% block tablehead %}
+<th>Package</th>
+<th>Actions</th>
+{% endblock tablehead %}
+
+{% block tablebody %}
+{% for package in packages %}
+<tr class="{% cycle "odd" "even" %}">
+  <td>{{ package.nevra }}</td>
+  <td class="actions">
+    {% if repo.children %}
+    <a href="{% url sponge.views.repos.promote_package repo_id=repo.id package=package.id %}">promote</a>
+    {% endif %}
+    {% if repo.parent %}
+    <a href="{% url sponge.views.repos.demote_package repo_id=repo.id package=package.id %}">demote</a>
+    {% endif %}
+  </td>
+</tr>
+{% endblock tablebody %}
+
+{% else %}
+
+{% block table %}
+No packages
+{% endblock table %}
+
+{% endif %}

@@ -1,0 +1,9 @@
+{% extends "formbase.html" %}
+{% block title %}Edit filter "{{ filter.description }}"{% endblock %}
+{% block pagetitle %}Edit filter "{{ filter.description }}"{% endblock %}
+
+{% block actions %}
+<li><a href="{% url sponge.views.filters.delete filter_id=filter.id %}">delete</a></li>
+{% endblock %}
+
+{% block formcancelurl %}{% url sponge.views.filters.list %}{% endblock %}

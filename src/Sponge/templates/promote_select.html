@@ -1,0 +1,22 @@
+{% extends "formbase.html" %}
+{% block title %}Promote packages to {{ repo.name }}{% endblock %}
+{% block pagetitle %}Promote packages to {{ repo.name }}{% endblock %}
+
+{% block js %}
+$(function () {
+	$('.checkall').click(function () {
+		$(this).parents('form').find(':checkbox').attr('checked', this.checked);
+	});
+});
+{% endblock %}
+
+{% block formdescription %}Promote the following packages from "{{ repo.parent.name }}" to "{{ repo.name }}":{% endblock %}
+
+{% block formextra %}
+<div class="field checkboxSelect">
+  <label for="_checkAll">Select all</label>
+  <input type="checkbox" class="checkall" name="_checkAll" />
+</div>
+{% endblock %}
+
+{% block formcancelurl %}{% url sponge.views.repos.view repo_id=repo.id %}{% endblock %}

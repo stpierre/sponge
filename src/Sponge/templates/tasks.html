@@ -1,0 +1,32 @@
+{% extends "tablebase.html" %}
+{% block title %}Running Tasks{% endblock %}
+{% block pagetitle %}Running Tasks{% endblock %}
+
+{% if tasks %}
+{% block tablehead %}
+<th>Task ID</th>
+<th>Task Type</th>
+<th>Status</th>
+<th>Actions</th>
+{% endblock tablehead %}
+
+{% block tablebody %}
+{% for task in tasks %}
+  <tr class="{% cycle "odd" "even" %}">
+    <td>{{ task.id }}</td>
+    <td>{{ task.tclass }}</td>
+    <td>{{ task.status }}</td>
+    <td class="actions">
+      <a href="{% url sponge.views.tasks.clone task_id=task.id %}">cancel</a>
+    </td>
+  </tr>
+{% endfor %}
+{% endblock tablebody %}
+{% else %}
+
+{% block content %}
+No currently running tasks.
+{% endblock content %}
+
+{% endif %}
+

@@ -1,0 +1,16 @@
+{% extends "formbase.html" %}
+{% block title %}Demote from {{ repo.name }}{% endblock %}
+{% block pagetitle %}Demote packages from {{ repo.name }}{% endblock %}
+
+{% block formdescription %}
+{% if repos|length == 1 %}
+The following packages will be demoted from "{{ repos.0.name }}":
+{% else %}
+The following packages will be demoted from the repos
+{% for repo in repos %}
+   "{{ repo.name }}"{% if not forloop.last %}, {% if forloop.revcounter == 2 %}and{% endif %}{% endif %}
+{% endfor %}:
+{% endif %}
+{% endblock %}
+
+{% block formsubmit %}Demote{% endblock %}

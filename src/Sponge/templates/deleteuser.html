@@ -1,0 +1,8 @@
+{% extends "formbase.html" %}
+{% block title %}Delete user {{ user.name }}{% endblock %}
+{% block pagetitle %}Delete user {{ user.name }}{% endblock %}
+
+{% block formdescription %}The user "{{ user.name }}" ({{ user.login }}) will be deleted.{% endblock %}
+
+{% block formsubmit %}Delete{% endblock %}
+{% block formcancelurl %}{% url sponge.views.users.list %}{% endblock %}

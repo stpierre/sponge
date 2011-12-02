@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+{% block title %}Diff of {{ repo1.name }} and {{ repo2.name }}{% endblock %}
+{% block pagetitle %}Diff of {{ repo1.name }} and {{ repo2.name }}{% endblock %}
+
+{% block js %}
+$(document).ready(function() 
+    {
+        $("#diff").tablesorter( {sortList: [[0, 0]]} ); 
+    } 
+); 
+{% endblock %}
+
+{% block actions %}
+{% if mode == "diff" %}
+<li><a href="?mode=all">Show all packages</a></li>
+{% else %}
+<li><a href="?mode=diff">Only show differences</a></li>
+{% endif %}
+{% endblock %}
+
+{% block content %}
+<table id="diff" class="tablesorter">
+  <thead>
+    <tr>
+      <th><a href="{% url sponge.views.repos.view repo_id=repo1.id %}">{{ repo1.name }}</a></th>
+      <th><a href="{% url sponge.views.repos.view repo_id=repo2.id %}">{{ repo2.name }}</a></th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for pkgname, nevras in allpackages.items %}
+      <tr class="{% cycle "odd" "even" %}">
+        {% if nevras.repo1 %}
+          <td class="{% if nevras.repo1 == nevras.repo2 %}same{% else %}diff{% endif %}">{{ nevras.repo1 }}</td>
+        {% else %}
+          <td class="missing">&nbsp;</td>
+        {% endif %}
+        {% if nevras.repo2 %}
+          <td class="{% if nevras.repo1 == nevras.repo2 %}same{% else %}diff{% endif %}">{{ nevras.repo2 }}</td>
+        {% else %}
+          <td class="missing">&nbsp;</td>
+        {% endif %}
+      </tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% endblock %}

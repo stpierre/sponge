@@ -1,0 +1,8 @@
+{% extends "formbase.html" %}
+{% block title %}Delete filter {{ filter.description }}{% endblock %}
+{% block pagetitle %}Delete filter {{ filter.description }}{% endblock %}
+
+{% block formdescription %}The filter "{{ filter.description }}" ({{ filter.id }}) will be deleted.{% endblock %}
+
+{% block formsubmit %}Delete{% endblock %}
+{% block formcancelurl %}{% url sponge.views.filters.list %}{% endblock %}

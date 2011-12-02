@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+{% block title %}List Repositories{% endblock %}
+{% block pagetitle %}List Repositories{% endblock %}
+
+{% block js %}
+$(document).ready(function() {
+    $("table#table0").tablesorter();
+    $("input#search").quicksearch('table tbody tr',
+                                  {selector: 'th' });
+});
+{% endblock %}
+
+{% block content %}
+{% block beforetable %}{% endblock beforetable %}
+{% block table %}
+<form name="search">
+<div class="field inputText">
+  <label for="_search">Search</label>
+  <input type="text" id="search" name="_search"/>
+</div>
+</form>
+<table id="table0" class="tablesorter">
+  <thead><tr>
+    {% block tablehead %}{% endblock tablehead %}
+  </tr></thead>
+  <tbody>
+    {% block tablebody %}{% endblock %}
+  </tbody>
+</table>  
+{% endblock table %}
+{% block aftertable %}{% endblock aftertable %}
+{% endblock content %}

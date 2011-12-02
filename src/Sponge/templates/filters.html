@@ -1,0 +1,29 @@
+{% extends "tablebase.html" %}
+{% block title %}List Filters{% endblock %}
+{% block pagetitle %}List Filters{% endblock %}
+
+{% block actions %}
+<li><a href="{% url sponge.views.filters.add %}">Add Filter</a></li>
+{% endblock %}
+
+{% block tablehead %}
+<th>ID</th>
+<th>Description</th>
+<th>Type</th>
+<th>Patterns</th>
+<th>Actions</th>
+{% endblock tablehead %}
+
+{% block tablebody %}
+{% for filter in filters %}
+  <tr class="{% cycle "odd" "even" %}">
+    <td>{{ filter.id }}</td>
+    <td>
+      <a href="{% url sponge.views.filters.view filter_id=filter.id %}">{{ filter.description }}</a>
+    </td>
+    <td>{{ filter.type|title }}</td>
+    <td>{{ filter.package_list|length }}</td>
+    <td><a href="{% url sponge.views.filters.delete filter_id=filter.id %}">delete</a></td>
+  </tr>
+{% endfor %}
+{% endblock tablebody %}

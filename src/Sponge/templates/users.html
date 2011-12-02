@@ -1,0 +1,25 @@
+{% extends "tablebase.html" %}
+{% block title %}List Users{% endblock %}
+{% block pagetitle %}List Users{% endblock %}
+
+{% block actions %}
+<li><a href="{% url sponge.views.users.add %}">Add User</a></li>
+{% endblock %}
+
+{% block tablehead %}
+<th>Login</th>
+<th>Name</th>
+<th>Actions</th>
+{% endblock tablehead %}
+
+{% block tablebody %}
+{% for user in users %}
+  <tr class="{% cycle "odd" "even" %}">
+    <td>
+      <a href="{% url sponge.views.users.view login=user.login %}">{{ user.login }}</a>
+    </td>
+    <td>{{ user.name }}</td>
+    <td><a href="{% url sponge.views.users.delete login=user.login %}">delete</a></td>
+  </tr>
+{% endfor %}
+{% endblock tablebody %}

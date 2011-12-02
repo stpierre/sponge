@@ -1,0 +1,30 @@
+{% extends "tablebase.html" %}
+{% block title %}List Repositories{% endblock %}
+{% block pagetitle %}List Repositories{% endblock %}
+
+{% block tablehead %}
+<th>Repository</th>
+<th>Packages</th>
+<th>Actions</th>
+{% endblock tablehead %}
+
+{% block tablebody %}
+{% for repo in repositories %}
+  <tr class="{% cycle "odd" "even" %}">
+    <td>
+      <a href="{% url sponge.views.repos.view repo_id=repo.id %}">{{ repo.name }}</a>
+    </td>
+    <td>{{ repo.package_count }}</td>
+    <td class="actions">
+      {% if repo.parent %}
+        {% if repo.updates %}
+          <a href="{% url sponge.views.repos.promote_select repo_id=repo.id %}">promote to</a>
+        {% endif %}
+        <a href="{% url sponge.views.repos.demote_select repo_id=repo.id %}">demote from</a>
+      {% endif %}
+      <a href="{% url sponge.views.repos.sync repo_id=repo.id %}">sync</a>
+      <a href="{% url sponge.views.repos.clone repo_id=repo.id %}">clone</a>
+    </td>
+  </tr>
+{% endfor %}
+{% endblock tablebody %}

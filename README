@@ -1,0 +1,12 @@
+Sponge is a basic web frontend to Pulp (http://www.pulpproject.org).
+It is based around the workflow described at
+http://www.usenix.org/events/lisa11/tech/full_papers/Pierre.pdf
+(currently requires a login; to be public shortly.)
+
+Sponge runs on Django, using Pulp (of course) and Celery.
+
+Sponge includes code from:
+
+  * jQuery (http://jquery.org)
+  * jQuery Tablesorter (http://tablesorter.com)
+  * jQuery Quicksearch (https://github.com/riklomas/quicksearch)

@@ -1,0 +1,16 @@
+{% extends "formbase.html" %}
+{% block title %}Promote packages to {{ repo.name }}{% endblock %}
+{% block pagetitle %}Promote packages to {{ repo.name }}{% endblock %}
+
+{% block formdescription %}
+{% if repos|length == 1 %}
+The following packages will be promoted from "{{ repos.0.parent.name }}" to "{{ repos.0.name }}":
+{% else %}
+The following packages will be promoted from "{{ repos.0.parent.name }}" to the repos
+{% for repo in repos %}
+   "{{ repo.name }}"{% if not forloop.last %}, {% if forloop.revcounter == 2 %}and{% endif %}{% endif %}
+{% endfor %}:
+{% endif %}
+{% endblock %}
+
+{% block formsubmit %}Promote{% endblock %}

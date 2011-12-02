@@ -1,0 +1,8 @@
+{% extends "formbase.html" %}
+{% load packages %}
+{% block title %}Promote {{ package|nevra }} in {{ repo.name }}{% endblock %}
+{% block pagetitle %}Promote {{ package|nevra }} in {{ repo.name }}{% endblock %}
+
+{% block formdescription %}Promote {{ package|nevra }} in {{ repo.name }} to the following repositories:{% endblock %}
+
+{% block formcancelurl %}{% url sponge.views.repos.view repo_id=repo.id %}{% endblock %}
