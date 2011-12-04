@@ -10,3 +10,58 @@ Sponge includes code from:
   * jQuery (http://jquery.org)
   * jQuery Tablesorter (http://tablesorter.com)
   * jQuery Quicksearch (https://github.com/riklomas/quicksearch)
+
+INSTALLATION
+
+Sponge runs on RHEL 6 and Fedora 15+.  If God smiles upon you, you
+might even be able to get it running on RHEL 5, but don't count on
+it.
+
+These instructions deal with getting Sponge running under the Django
+development server; getting it running under Apache is significantly
+more difficult due to poor packaging of Celery.  I'll add instructions
+for that some day.
+
+First, clone the Sponge repo.  These instructions will assume you have
+cloned it into ~/sponge.
+
+Then install some needed packages:
+
+$ sudo yum install django-celery rabbitmq-server pulp-consumer \
+    python-setuptools python-dateutil python-sqlite2
+
+Next, configure /etc/pulp/consumer/consumer.conf to point at your Pulp
+server.
+
+Now you can sync up your database and start the Django development
+server:
+
+cd ~/sponge/Sponge
+python manage.py syncdb
+python manage.py runserver
+
+At this point you should be able to access Sponge at
+http://localhost:8000/.  You can log in using your existing Pulp
+credentials.
+
+Note that when running under the Django development server, the dev
+server also serves the media; because all of Sponge requires a login,
+you will not be able to access the CSS stuff at the login screen
+itself.  I promise it gets prettier once you log in.  (When deploying
+Sponge in production, this is not an issue.)
+
+KNOWN ISSUES
+
+Sponge is alpha code, at best.  But that's okay, because the same is
+true of Pulp.  At a minimum, the following known issues exist:
+
+* Sponge does not implement (and does not try to implement) a
+  full GUI for Pulp.  It implements a particular workflow, and does
+  not have support for things outside that workflow -- editing roles
+  and permissions, for example.  Those can still be done via Pulp.
+
+* Sponge does no caching, which makes it _slow_.  Real slow.  At some
+  point I'll likely add some limited caching, but because Sponge just
+  front-ends Pulp, and everything can still be done via Pulp, cache
+  expiration isn't really a solvable problem.  So for the meantime,
+  Sponge is slow.
