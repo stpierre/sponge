@@ -101,3 +101,9 @@ true of Pulp.  At a minimum, the following known issues exist:
   front-ends Pulp, and everything can still be done via Pulp, cache
   expiration isn't really a solvable problem.  So for the meantime,
   Sponge is slow.
+
+* Sponge does not use Django models to implement its conversation with
+  Pulp.  It calls the Pulp Python client API directly, without any
+  sort of model wrapping.  This makes writing new views for simple
+  things harder than it should be.  The right way is clearly to write
+  a Pulp model, but that's hard.
