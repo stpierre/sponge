@@ -11,6 +11,42 @@ Sponge includes code from:
   * jQuery Tablesorter (http://tablesorter.com)
   * jQuery Quicksearch (https://github.com/riklomas/quicksearch)
 
+OVERVIEW
+
+You should really read
+http://www.usenix.org/events/lisa11/tech/full_papers/Pierre.pdf for a
+full understanding of how Sponge works.  This is the tl;dr, plus some
+details.
+
+Sponge is a partial web frontend to Pulp, so you need to understand
+Pulp before you can understand Sponge.  Go do that; we'll wait for
+you.
+
+Okay, now that you have a running Pulp server (isn't it cool?), we can
+talk about Sponge.  Sponge does two things:
+
+1.  Sponge takes over your Pulp sync schedule and runs all of your
+syncs every 24 hours.  (This is configurable.)  Sponge assumes that
+you have set up filters such that this is safe.
+
+2.  Sponge provides a web interface for the aforementioned workflow.
+Basically, you'll sync upstream repos, and then clone your local repos
+and use filters to mediate the syncs from the local mirror of the
+upstream stuff.
+
+For instance, you might mirror the CentOS 6 'os' and 'updates' repos,
+but you don't want the 'kernel' package to get updated automatically.
+So you'd create local repos like:
+
+CentOS 6 -> CentOS 6 Testing -> CentOS 6 Stable
+
+"CentOS 6" would be a direct mirror of upstream, and would not
+actually be used by any systems.  Some systems would use the "CentOS 6
+Testing" repos, which is a clone of "CentOS 6," while most systems
+would use "CentOS 6 Stable."  When a new kernel is released, you would
+promote it manually to Testing, and, if all went well, thence to
+Stable.
+
 INSTALLATION
 
 Sponge runs on RHEL 6 and Fedora 15+.  If God smiles upon you, you
