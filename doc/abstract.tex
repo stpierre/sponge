@@ -1,0 +1,11 @@
+This paper describes an approach for managing package versions and
+updates in a homogenous manner across a heterogenous environment by
+intensively managing a set of software repositories rather than by
+managing the clients.  This entails maintaining multiple local
+mirrors, each of which is aimed at a different class of client: One is
+directly synchronized from the upstream repositories, while others are
+maintained from that repository according to various policies that
+specify which packages are to be automatically pulled from upstream
+(and therefore automatically installed without any local vetting) and
+which are to be considered more carefully -- likely installed in a
+testing environment, for instance -- before they are deployed widely.

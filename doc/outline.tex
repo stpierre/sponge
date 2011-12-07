@@ -1,0 +1,41 @@
+\section{Outline of Final Paper}
+\label{sec:outline}
+
+\begin{outline}[enumerate]
+\1 Background
+\2 How Bcfg2 enforces updates
+\3 Why Bcfg2 enforces updates
+
+\1 The Problem
+\2 Automatic updates on most (but not all) packages
+\2 Manual updates on more ``impactful'' packages
+\3 How ``impactful'' packages are selected
+\2 Different update policies for different systems
+\3 Some systems need to peg to a certain package set
+\2 Need to maintain separate repositories for development, test, and
+production.
+\2 Must be auditable and enforce privilege separation
+
+\1 Other solutions -- why they won't work
+\2 Yum excludes: difficult to push out updates of ``impactful'' packages
+\2 yum-versionlock: extremely tedious to push out updates; error-prone
+\2 Specifying versions in Bcfg2: fairly tedious; error-prone;
+transitional problems in environment with multiple configuration
+management tools
+\2 Yum priorities: not a real solution to the problem, but part of the
+solution
+\2 Spacewalk: PostgreSQL version is very underfeatured; feature creep; lack
+of support for SLES
+
+\1 Pulp as a solution
+\2 Automatic sync with blacklist and/or whitelist of packages,
+repositories, and distros
+\2 Manual promote/demote
+\2 Logs for auditability
+\2 Enforces distro-wide consistency
+\2 Auditability of package errata
+
+\1 Future development
+\2 Tiered repositories
+\2 Guaranteeing a minimum package age
+\end{outline}

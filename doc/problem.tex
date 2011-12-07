@@ -1,0 +1,36 @@
+\section{The Problem}
+
+The problem we set out to solve was one familiar to many systems
+administrators: a sane approach to installing package updates.
+Namely, we sought to find a balance between maintaining systems full
+up-to-date in order to ensure that security fixes are applied in a
+timely manner; and the need to test packages that might be high-risk
+or ``impactful'' before deploying them in order to avoid unplanned
+outages.  Beattie et al. observed that up to 18\% of initial patches
+to resolve public vulnerabilities were faulty on the day of their
+release, a number that dropped to 6\% by 30 days after the release of
+the initial patch~\cite{BACWWS02}.
+
+Moreover, we sought to do this as automatically as possible.
+
+In a large, heterogenous environment such as ours -- over a thousand
+servers, over 20 admins in 5 different teams, managing three projects
+often with very different functional requirements -- it was necessary
+that any approach be very flexible as well.  We require the ability to
+maintain different update policies for different systems, including
+the selection of different ``impactful'' packagesets: while the
+``postfix'' package might be quite high-risk for a mail server, it's
+trivial on a compute cluster node, for instance.  Some systems are so
+sensitive to package versions that they needed to be pegged at a
+specific set of packages -- no updates at all.  (As we shall see, this
+is not always a simple task.)
+
+Moreover, in addition to maintaining different update policies and
+``impactful'' package sets for different types of machines, we needed
+to maintain separate repositories -- with different package versions
+-- for development, test, and production environments.
+
+Finally, any solution we selected need to be auditable and enforce
+reasonable privilege separation.  With five different teams working on
+very different tasks, it was important that we not be able to
+``clobber'' each other's work.

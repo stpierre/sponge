@@ -1,0 +1,54 @@
+\section{Background}
+\label{sec:background}
+
+It is important to understand some points about our environment, as
+they provide important constraints to our solution.
+
+We are lucky enough to run a fairly homogenous set of operating
+systems consisting primarily of Red Hat Enterprise Linux and CentOS
+servers, with fair numbers of Fedora and SuSE outliers.  In short, we
+are dealing entirely with RPM-based packaging, and with operating
+systems that are capable of using yum~\cite{Vid11}.  As yum is the
+default package management utility for the majority of our servers, we
+opted to use yum rather than try to switch to another package
+management utility.
+
+For configuration management, we chose to use Bcfg2~\cite{Des11} for
+reasons wholly unrelated to package and software management.  Bcfg2 is
+a Python and XML-based configuration management engine that ``helps
+system administrators produce a consistent, reproducible, and
+verifiable description of their environment''~\cite{Des11}.  It is in
+particular the focus on reproducibility and verification that forced
+us to consider updating and patching anew.
+
+In order to guarantee that a given configuration -- where a
+``configuration'' is defined as the set of paths, files, packages, and
+so forth, that describes a single system -- is fully replicable, Bcfg2
+ensures that every package specified for a system is the latest
+available from that system's software repositories~\cite{JLS11}.  (As
+will be noted, this can be overridden by specifying an explicit
+package version.)  This grants the system administrator two important
+abilities: to provision identical machines that will remain identical;
+and to reprovision machines to the exact same state they were
+previously in.  But it also makes it unreasonable to simply use the
+vendor's software repositories (or other upstream repositories), since
+all updates will be installed immediately without any vetting.  The
+same problem presents itself even with a local mirror.
+
+Bcfg2 can also use ``the client's response to the specification ... to
+assess the completeness of the specification''~\cite{Des11}.  For this
+to happen, the Bcfg2 server must be able to understand what a
+``complete'' specification entails, and so the server does not
+entirely delegate package installation to the Bcfg2 client.  Instead,
+it performs package dependency resolution on the server rather than
+allowing the client to set its own configuration.  This necessitates
+ensuring that the Bcfg2 Packages plugin uses the same yum
+configuration as the clients; Bcfg2 has support for making this rather
+simple~\cite{JLS11}, but the Packages plugin does not support the full
+range of yum functionality, so certain functions like the
+``versionlock'' plugin and even package excludes, are not available.
+Due to the architecture of Bcfg2 -- architecture designed to guarantee
+replicability and verification of server configurations -- it is not
+feasible or, in most cases, possible to do client-based package and
+repository management.  This became critically important in selecting
+a solution.

@@ -1,0 +1,50 @@
+\documentclass[letterpaper,10pt]{article}
+
+\usepackage{endnotes}
+\usepackage{url}
+\usepackage{newclude}
+\usepackage{graphicx}
+\usepackage{epstopdf}
+\usepackage{multicol}
+\usepackage{fullpage}
+
+% disables chapter, section and subsection numbering
+\setcounter{secnumdepth}{-1} 
+
+\newcommand{\superscript}[1]{\ensuremath{^{\textrm{#1}}}}
+\newcommand{\subscript}[1]{\ensuremath{_{\textrm{#1}}}}
+
+\title{\Large \bf Staging Package Deployment via Repository Management}
+\author{Chris St. Pierre - \url{stpierreca@ornl.gov}\\
+\and
+Matt Hermanson - \url{mjhermanson@ornl.gov}\\
+National Center for Computational Sciences\\
+Oak Ridge National Laboratory\\
+Oak Ridge, TN, USA\thanks{This paper has been authored by contractors
+  of the U.S. Government under Contract
+  No. DE-AC05-00OR22725. Accordingly, the U.S. Government retains a
+  non-exclusive, royalty-free license to publish or reproduce the
+  published form of this contribution, or allow others to do so, for
+  U.S. Government purposes.}}
+
+\begin{document}
+\date{}
+
+\maketitle
+\begin{abstract}
+  \include*{abstract}
+\end{abstract}
+
+\begin{multicols}{2}
+\include*{background}
+\include*{bad-solutions}
+\include*{pulp}
+\include*{future}
+\include*{wrapup}
+{\footnotesize \bibliographystyle{acm}
+\bibliography{paper}}
+
+\theendnotes
+\end{multicols}
+
+\end{document}

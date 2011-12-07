@@ -1,0 +1,175 @@
+\section{Other Solutions}
+\label{sec:other-solutions}
+
+There are a vast number of potential solutions to this problem that
+would seem to be low-hanging fruit -- far simpler to implement, at
+least initially, than our ultimate solution -- but that would not
+work, for various reasons.
+
+\subsection{Yum Excludes}
+
+A core yum feature is the ability to exclude certain packages from
+updates or installation~\cite{Vid02}.  At first, this would seem to
+be a solution to the problem of package versioning: simply install the
+package version you want, and then exclude it from further updates.
+But this has several issues that made it unsuitable for our use (or,
+we believe, this use case in general):
+
+\begin{itemize}
+
+\item It does not (and cannot) guarantee a specific version.  Using
+  excludes to set a version depends on that version being installed
+  (manually) prior to adding the package to the exclude list.
+
+\item There is no guarantee that the package is still in the
+  repository.  Many mainstream repositories\endnote{For instance,
+    Extra Packages for Enterprise Linux (EPEL) and the CentOS
+    repositories themselves.} do not retain older versions in the same
+  repository as current packages.  Consequently, when reinstalling a
+  machine where yum excludes have been used to set package versions
+  (or when attempting to duplicate such a machine), there is no
+  guarantee that the package version expected will even be available.
+
+\item In order to use yum excludes to control package versions, a very
+  specific order of events must occur: first, the machine must be
+  installed without the target package included (as Kickstart, the
+  RHEL installation tool, does not support installing a specific
+  version of a package~\cite{Ana11}); next, the correct package
+  version must be installed; and finally, the package must be added to
+  the exclude list.  If this happens out of order, then the wrong
+  version of the package might be installed, or the package might not
+  be installed at all.
+
+\item Supplying a permitted update to a package is even more
+  difficult, as it involves removing the package exclusion, updating
+  to the correct version, and then restoring the exclusion.  A
+  configuration management system would have to have tremendously
+  granular control over the order in which actions are performed to
+  accomplish this delicate goal.
+
+\item As discussed earlier, Bcfg2 performs dependency resolution on
+  the server side in order to provide a guarantee that a client's
+  configuration is fully specified.  By using yum excludes -- which
+  cannot be configured in Bcfg2's internal dependency resolver -- the
+  relationship between the client and the server is broken, and Bcfg2
+  will in perpetuity claim that the client is out of sync with the
+  server, thus reducing the usefulness of the Bcfg2 reporting tools.
+
+\end{itemize}
+
+While yum excludes appear at first to be a viable option, their use to
+set package versions is not replicable, consistent, and cannot be
+trivially automated.
+
+\subsection{Specifying Versions in Bcfg2}
+
+Bcfg2 is capable of specifying specific versions of packages in the
+specification, e.g.:
+
+{\tt \small
+\begin{verbatim}
+<BoundPackage name="glibc" type="yum">
+  <Instance version="2.13" release="1"
+            arch="i686"/>
+  <Instance version="2.13" release="1"
+            arch="x86_64"/>
+</BoundPackage>
+\end{verbatim}
+}
+
+This is obviously quite verbose (more so because the example uses a
+multi-arch package), and as a result of its verbosity it is also
+error-prone.  Having to recopy the version, release, and architecture
+of a package -- separately -- is not always a trivial process, and the
+relatively few constraints of version and release strings makes it
+less so.  For instance, given the package:
+
+{\tt \small
+\begin{verbatim}
+iomemory-vsl-2.6.35.12-88.fc14.x86_64-
+    2.3.0.281-1.0.fc14.x86_64.rpm
+\end{verbatim}
+}
+
+The package name is ``iomemory-vsl-2.6.35.12-88.fc14.x86\_64'' (which
+refers to the specific kernel for which it was built), the version is
+``2.3.0.281'' and the release is ``1.0.fc14''.\endnote{Admittedly,
+  this is a non-standard naming scheme, but no solution can be
+  predicated on the idea that all RPMs are well-built.}  This can be
+clarified through use of the \texttt{--queryformat} option to
+\texttt{rpm}, but the fact that more advanced RPM commands are
+necessary makes it clear that this approach is untenable in general.
+Even more worrisome is the package epoch, a sort of ``super-version,''
+which RPM cleverly hides by default, but could cause a newer package
+to be installed if it was not specified properly.
+
+Maintenance is also tedious, as it involves endlessly updating verbose
+version strings; recall that a given version is just shorthand for
+what we actually care about -- that a package \emph{works}.
+
+This approach also does not abrogate the use of yum on a system to
+update it beyond the appropriate point.  The only thing keeping a
+package at the chosen version is Bcfg2's own self-restraint; if an
+admin on a machine lacks that same self-restraint, then he or she
+could easily update a package that was not to be updated, whereupon
+Bcfg2 would try to downgrade it.
+
+Finally, this approach presents specific difficulties for us, as our
+adoption of Bcfg2 is far from complete; large swaths of the center
+still use Cfengine 2, and some machines -- particularly compute and
+storage platforms -- operate in a diskless manner and do not use
+configuration management tools in a traditional manner.  They depend
+entirely on their images for package versions, so specifying versions
+in Bcfg2 would not help.
+
+To clarify, using Bcfg2 forced us to reconsider this problem, and any
+solution must be capable of working with Bcfg2, but it cannot be
+assumed that the solution may leverage Bcfg2.
+
+\subsection{Yum versionlock}
+
+Using yum's own version locking system would appear to improve upon
+pegging versions in Bcfg2: it works on all systems, regardless of
+whether or not they use Bcfg2; and a shortcut command, \texttt{yum
+  versionlock <package-name>}, is provided to make the process of
+maintaining versions less error-prone.\endnote{The command in question
+  merely maintains a local file on a machine, so that file would still
+  have to be copied into the Bcfg2 specification, but we believe this
+  would be less error-prone than copying package version details.}
+
+It also solves many of the problems of yum excludes, but suffers from
+a critical flaw in that approach: by setting package versions on the
+client, the relationship between the Bcfg2 client and server would be
+broken.
+
+Combinations of these three approaches merely exhibit combinations of
+their flaws.  For instance, the promising combination of yum's
+versionlock plugin and specifying the version in Bcfg2 would ensure
+that the Bcfg2 client and server were of a mind about package
+versions, and would work on non-Bcfg2 machines; however, it would
+forfeit versionlock's ease of use and require the administrator to
+once again manually copy package versions.
+
+\subsection{Spacewalk}
+
+Spacewalk was the first full-featured solution we looked at that aims
+to replace the mirroring portion of this relationship; all of the
+other potential solutions listed thus far have attempted to work with
+a ``dumb'' mirror and use yum features to work around the problem we
+have described.  Spacewalk is a local mirror system that ``manages
+software content updates for Red Hat derived [\emph{sic}] distributions''
+\cite{RH10}; it is a tremendously full-featured system, with support
+for custom ``channels,'' collections of packages assembled in an
+ad-hoc basis.
+
+Unfortunately, Spacewalk was a non-starter for us for the same reason
+that it has failed to gain much traction in the community at large: of
+the two versions of Spacewalk, only the Oracle version actually
+implements all of the features; the PostgreSQL version is deeply
+underfeatured, even after several years of work by the Spacewalk team
+to port all of the Oracle stored procedures.
+
+As it turns out, Red Hat has a successor in mind for Spacewalk and
+Satellite: CloudForms~\cite{WS11}.  The content management portion
+of CloudForms -- roughly corresponding to the mirror and repository
+management functionality of Spacewalk -- is Pulp.

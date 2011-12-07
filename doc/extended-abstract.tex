@@ -1,0 +1,121 @@
+\section{Abstract}
+\label{sec:abstract}
+
+Despite a rapid proliferation of configuration management tools and
+other utilities designed to increase the homogeneity of an installed
+base of machines, problems remain in the area of software packaging
+and update deployment.  Ensuring a homogeneous installation remains a
+difficult task, particularly when balanced against organizational
+needs for adequate pre-deployment testing of packages and updates, and
+agility in deployment to respond to security concerns.
+
+Traditional solutions to this problem have generally been extremely
+tedious.  Yum offers plugins, like ``versionlock'', that will allow
+the systems administrator to peg a given package at a certain version,
+but it is nontrivial to configure at scale, and depends on version
+numbers that are, ultimately, arbitrary.  Similarly, configuration
+management systems like Bcfg2, Cfengine, and Puppet provide methods to
+peg packages at certain versions.
+
+What is ultimately of concern, though, is not the version of a
+package, but whether or not a package works.  Pegging at a certain
+version is a hack -- and a deeply tedious one that is profoundly
+susceptible to typos.  In this paper, we describe a method whereby we
+manage the software repositories intensively rather than managing the
+installation of updates.  Centralizing update management ultimately
+improves auditability, provides for policy-based (rather than
+version-based) updates, and greatly reduces the tedium of managing
+updates.
+
+For configuration management, we selected Bcfg2 \cite{Des11} for
+unrelated reasons.  In order to guarantee that a given configuration
+-- where a ``configuration'' is defined as the set of paths, files,
+packages, and so forth, that describes a single system -- is fully
+replicable, Bcfg2 ensures that every package specified for a system is
+the latest available from that system's software
+repositories \cite{JL11}.  (As noted earlier, this can be overridden by
+specifying an explicit package version.)  This grants the system
+administrator two important abilities: to provision identical machines
+that will remain identical; and to reprovision machines to the exact
+same state they were previously in.  But it also makes it unreasonable
+to simply use the vendor's software repositories (or other upstream
+repositories), since all updates will be installed immediately without
+any vetting.  The same problem presents itself even with a local
+mirror.
+
+Another quirk of Bcfg2 is that it does not entirely delegate package
+installation to the Bcfg2 client.  Instead, it performs dependency
+resolution on the server, which is necessary to ensure that the server
+can present a complete configuration to the client rather than
+allowing the client to set its own configuration.  This necessitates
+ensuring that the client and server have the same yum configuration;
+Bcfg2 has support for making this rather simple \cite{JL11}, but it
+also means that much yum functionality, like the aforementioned
+``versionlock'' plugin and even such simple functionality as package
+excludes, is not available.  Due to the architecture of Bcfg2 --
+architecture designed to guarantee consistency of client machines --
+it is not feasable or, in some cases, possible to do the client-based
+package and repository management we are familiar with.
+
+The solution to this problem is to perform that management not on the
+clients, nor even in the Bcfg2 specification, but rather at the level
+of the software repository itself, by maintaining multiple local
+mirrors, each of which is aimed at a different class of client: One is
+directly synchronized from the upstream repositories, while others are
+maintained based on that according to various policies that specify
+which packages are to be automatically pulled from upstream (and
+therefore automatically installed without any local vetting) and which
+are to be considered more carefully -- likely installed in a testing
+environment, for instance -- before they are deployed widely.
+
+Like many systems administrators, we operate homogeneous servers in a
+deeply heterogeneous environment.  This approach makes it trivial to
+maintain different servers differently by simply changing the mirror
+sync policy rather than by managing an unwieldy list of package
+versions.  For instance, some vendors might require a certain minor
+revision of Red Hat Enterprise Linux (RHEL) for their software; in
+practice, this is simply shorthand for specifying a certain set of
+packages.  With Bcfg2's forced-update feature, this would be an
+astoundingly tedious list to initially set up, and any updates that
+were permitted by the vendor would be similarly tedious.  With the
+approach of intensively managed repositories, though, we could easily
+maintain a RHEL 5.5 tree (call it ``production'') and a RHEL 5.6 tree
+(call it ``testing'') separately; when the vendor certified 5.6,
+updating all machines automatically would be as simple as
+synchronizing the ``testing'' repository to ``production.''
+
+Similarly, there's no longer any need to push packages to hosts, as
+with systems like Spacewalk (based on RHN), which may present security
+difficulties; once packages are added to the correct repositories and
+Bcfg2, then the clients will automatically pull them down.
+
+Nor is there any reason to be limited to the traditional triad of
+production-testing-development; with internally-developed software
+particularly, it may be useful to have a great deal more than three
+tiers, since not only the internal software is being tested and
+developed, but also the systems themselves.  For instance, it may be
+necessary to test new system packages and configurations before
+deploying them to the internal development environment; this
+multiplies the number of tiers required, and results in nine tiers of
+systems, ranging from systems development for the internal development
+boxes to production boxes running production code.  Attempting to
+manage this by pegging the versions of each individual package would
+be an astounding nightmare.
+
+By managing the repositories, though, we could craft a set of policies
+that would dictate how packages are synchronized between the nine sets
+of repositories that comprise our nine-tiered environment.  Ideally,
+this could even be a single policy, governing the packages that should
+be automatically installed and those that should be installed
+manually.  From several vast and unmaintainable lists of package
+versions, this is a tremendous improvement.
+
+The tool we have chosen to implement this strategy is Pulp
+\cite{Dob11}, a repository management system that provides full
+support for the sort of intensive management we require.  The final
+paper will include an explanation of how Pulp is used to provide the
+functionality described above, along with specific examples of how
+Pulp is used to ease the management of over a thousand servers by over
+20 admins spread across 5 different teams, often with very different
+functional requirements.  See the outline, below, for more details on
+the final paper.

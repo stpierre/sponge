@@ -1,0 +1,58 @@
+\section{Future Development}
+\label{sec:future}
+
+\subsection{Sponge}
+
+At this time, Pulp is very early code; it has been in use in another
+Red Hat product for a while, so certain paths are well-tested, but
+other paths are pre-alpha.  Consequently, its command line interface
+lacks polish, and many tasks within Pulp require extraordinary
+verbosity to accomplish.  It is also not clear if Pulp is intended for
+standalone use, although such is possible.
+
+To ease management of Pulp, we have written a web frontend for
+management of Pulp and its objects, called ``Sponge.'' Sponge, powered
+by the Django~\cite{Dja11} web framework, provides views into the
+state of Pulp repositories along with the ablity to manage its
+contents. Sponge leverages Pulp's Python client API to provide
+convience functions that ease our workflow.
+
+By presenting the information visually, Sponge makes repository
+management much more intuitive. Sponge extends the functionality of
+Pulp by displaying the differences between a repository and its parent
+in the form of a diff. These diffs give greater insight into
+exactly how \texttt{stable}, \texttt{unstable}, and \texttt{live}
+tiers differ. They also provide insight into the implications of a
+package promotion or removal.
+
+This is particularly important with package removal, since, as noted,
+removing a package will also remove anything that requires that
+specific package.  Without Sponge's diff feature and a confirmation
+step, that is potentially very dangerous; Pulp itself only gives you
+confirmation of the packages removed without an opportunity to confirm
+or reject a removal.  The contrapositive situation -- promoting a
+package pulling in unintended dependencies -- is also potentially
+dangerous, albeit less so.  Sponge helps avert both dangers.
+
+\subsection{Guaranteeing a minimum package age}
+
+As Beattie at al. observe~\cite{BACWWS02}, the optimal time to apply
+security patches is either 10 or 30 days after the patches have been
+released.  Our workflow currently doesn't provide any way to guarantee
+this; our weekly manual promotion of new packages merely suggests that
+a patch be somewhere between 0 and 6 days old before it is promoted to
+\texttt{unstable}, and 7 and 13 days old before being promoted to
+\texttt{stable}.  We plan to add a feature -- either to Sponge or to
+Pulp -- to promote packages only once they have aged properly.
+
+\subsection{Other packaging formats}
+
+In this paper we have dealt with systems using yum and RPM, but the
+approach can, at least in theory, be expanded to other packaging
+systems.  Pulp intends eventually to support not only Debian packages,
+but actually any sort of generic content at all~\cite{Dob11-3}, making
+it useful for any packaging system.  Bcfg2, for its part, already has
+package drivers for a wide array of packaging systems, including APT,
+Solaris packages (Blastwave- or SystemV-style), Encap, FreeBSD
+packages, IPS, Mac Ports, Pacman, and Portage.  This gives a hint of
+the future potential for this approach.
