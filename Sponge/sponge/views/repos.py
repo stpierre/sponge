@@ -30,10 +30,9 @@ def view(request, repo_id=None):
     packages = repoapi.packages(repo_id)
     for pkg in packages:
         pkg['nevra'] = repo_utils.get_nevra(pkg, repo['arch'])
-    editform = RepoEditForm(repo=repo)
-    diffform = DiffSelectForm()
+    editform = RepoEditForm(request.POST or None, repo=repo)
+    diffform = DiffSelectForm(request.POST or None, repo=repo)
     if request.method == 'POST' and "repoedit" in request.POST:
-        editform = RepoEditForm(request.POST, repo=repo)
         if editform.is_valid():
             success = True
             if editform.cleaned_data['name'] != repo['name']:
@@ -71,7 +70,6 @@ def view(request, repo_id=None):
                               % repo['id'])
             repo = repo_utils.reload_repo(repo['id'])
     elif request.method == 'POST' and "diffselect" in request.POST:
-        diffform = DiffSelectForm(request.POST)
         if diffform.is_valid():
             return HttpResponseRedirect(reverse('sponge.views.repos.diff',
                                                 kwargs=dict(repo_id=repo_id,

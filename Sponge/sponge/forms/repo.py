@@ -1,10 +1,11 @@
+import logging
+import operator
 from django import forms
 from django.forms import widgets
 from sponge.utils import repo as repo_utils
 from sponge.utils import filter as filter_utils
 from sponge.utils import group as group_utils
 from sponge.forms import DisplayWidget, CloneIdWidget
-import logging
 
 logger = logging.getLogger(__name__)
 
@@ -122,8 +123,20 @@ class RepoEditForm(RepoEditBase):
 
 
 class DiffSelectForm(forms.Form):
-    repo2 = \
-        forms.ChoiceField(label="Diff this repository with",
-                          required=True,
-                          choices=[(r['id'], r['name'])
-                                   for r in repo_utils.sort_repos_by_ancestry(repo_utils.get_repos().values())])
+    repo2 = forms.ChoiceField(label="Diff this repository with")
+
+    def __init__(self, *args, **kwargs):
+        self.repo = kwargs.pop("repo")
+        forms.Form.__init__(self, *args, **kwargs)
+        choices = []
+        repos = repo_utils.get_repos()
+        if self.repo['parent']:
+            choices.append((self.repo['parent']['id'],
+                            "Parent: %s" % self.repo['parent']['name']))
+            del repos[self.repo['parent']['id']]
+        for child in self.repo['children']:
+            choices.append((child['id'], "Child: %s" % child['name']))
+            del repos[child['id']]
+        choices.extend(sorted([(r['id'], r['name']) for r in repos.values()],
+                              key=operator.itemgetter(1)))
+        self.fields['repo2'].choices = choices

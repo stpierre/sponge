@@ -30,7 +30,7 @@ def get_repos(reload=False):
         repoapi = RepositoryAPI()
         repos = dict([(r['id'], r) for r in repoapi.repositories(dict())])
         for repo in repos.values():
-            _load_repo_extras(repo)
+            _load_repo_extras(repo, repos=repos)
         setattr(threading.local(), "repos", repos)
     return repos
 
@@ -42,7 +42,7 @@ def reload_repo(repo_id):
         _load_repo_extras(repos[repo_id])
     return get_repos()[repo_id]
 
-def _load_repo_extras(repo):
+def _load_repo_extras(repo, repos=None):
     config = get_config()
     repoapi = RepositoryAPI()
     repo['url'] = os.path.join(config.cds.baseurl,
@@ -50,9 +50,13 @@ def _load_repo_extras(repo):
 
     repo['parent'] = None
     repo['children'] = []
-    repos = getattr(threading.local(), "repos", dict())
+    if repos is None:
+        repos = getattr(threading.local(), "repos", dict())
+        
     for repo2 in repos.values():
-        if repo['id'] in repo2['clone_ids']:
+        if repo2 == repo:
+            continue
+        elif repo['id'] in repo2['clone_ids']:
             # the clone_id attribute is broken, but we check it anyway
             # just in case it gets fixed some day
             repo['parent'] = repo2
