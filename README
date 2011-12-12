@@ -64,7 +64,7 @@ cloned it into ~/sponge.
 Then install some needed packages:
 
 $ sudo yum install django-celery rabbitmq-server pulp-consumer \
-    python-setuptools python-dateutil python-sqlite2
+    python-setuptools python-dateutil python-sqlite2 django-picklefield
 
 Next, configure /etc/pulp/consumer/consumer.conf to point at your Pulp
 server.
