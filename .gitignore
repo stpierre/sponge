@@ -1,3 +1,4 @@
 *.pyc
 sponge.sqlite
 Sponge/certs/*.crt
+Sponge/media
