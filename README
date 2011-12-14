@@ -1,7 +1,8 @@
 Sponge is a basic web frontend to Pulp (http://www.pulpproject.org).
 It is based around the workflow described at
-http://www.usenix.org/events/lisa11/tech/full_papers/Pierre.pdf
-(currently requires a login; to be public shortly.)
+https://github.com/stpierre/sponge/blob/master/doc/paper.pdf?raw=true
+and http://www.usenix.org/events/lisa11/tech/full_papers/Pierre.pdf
+(login required).
 
 Sponge runs on Django, using Pulp (of course) and Celery.
 
@@ -14,9 +15,9 @@ Sponge includes code from:
 OVERVIEW
 
 You should really read
-http://www.usenix.org/events/lisa11/tech/full_papers/Pierre.pdf for a
-full understanding of how Sponge works.  This is the tl;dr, plus some
-details.
+https://github.com/stpierre/sponge/blob/master/doc/paper.pdf?raw=true
+for a full understanding of how Sponge works.  This is the tl;dr, plus
+implementation some details.
 
 Sponge is a partial web frontend to Pulp, so you need to understand
 Pulp before you can understand Sponge.  Go do that; we'll wait for
@@ -73,6 +74,7 @@ Now you can sync up your database and start the Django development
 server:
 
 cd ~/sponge/Sponge
+ln -s ../media
 python manage.py syncdb
 python manage.py runserver
 
@@ -86,15 +88,20 @@ you will not be able to access the CSS stuff at the login screen
 itself.  I promise it gets prettier once you log in.  (When deploying
 Sponge in production, this is not an issue.)
 
+See README.apache for some rough instructions to get Sponge running
+under Apache.
+
 KNOWN ISSUES
 
 Sponge is alpha code, at best.  But that's okay, because the same is
 true of Pulp.  At a minimum, the following known issues exist:
 
-* Sponge does not implement (and does not try to implement) a
-  full GUI for Pulp.  It implements a particular workflow, and does
-  not have support for things outside that workflow -- editing roles
-  and permissions, for example.  Those can still be done via Pulp.
+* Sponge does not implement (and does not try to implement) a full GUI
+  for Pulp.  It implements a particular workflow, and does not have
+  support for things outside that workflow -- editing roles and
+  permissions, for example.  Those can still be done via Pulp.  If
+  you're looking for a full frontend to Pulp, check out
+  http://katello.org/
 
 * Sponge does no caching, which makes it _slow_.  Real slow.  At some
   point I'll likely add some limited caching, but because Sponge just

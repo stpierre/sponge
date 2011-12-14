@@ -33,6 +33,9 @@ cp -R %{name}.wsgi media %{buildroot}%{_datadir}/%{name}
 %{__mkdir_p} %{buildroot}%{python_sitelib}
 cp -R src/Sponge %{buildroot}%{python_sitelib}
 
+%{__mkdir_p} %{buildroot}%{_defaultdocdir}/%{name}-%{version}
+cp README* %{buildroot}%{_defaultdocdir}/%{name}-%{version}
+
 %{__mkdir_p} %{buildroot}%{_sharedstatedir}/%{name}
 
 %clean
@@ -44,9 +47,14 @@ rm -rf %{buildroot}
 %{python_sitelib}/Sponge
 %attr(750,apache,apache) %{_sharedstatedir}/%{name}
 
+%doc %{_defaultdocdir}/%{name}-%{version}
+
 %config %{python_sitelib}/Sponge/settings.py
 
 %changelog
+* Wed Dec 14 2011 Chris St. Pierre <stpierreca@ornl.gov> 0.1.1-1
+- Added docs
+
 * Tue Nov 15 2011 Chris St. Pierre <stpierreca@ornl.gov> 
 - Initial build.
 

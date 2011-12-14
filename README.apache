@@ -1,0 +1,111 @@
+INSTALLATION UNDER APACHE
+
+If you decide to put Pulp into real production, you'll want to get it
+running under Apache.  That's more difficult, because the Celery
+packages for RHEL 6 are fairly broken.  These instructions are a kind
+of vague attempt to get Sponge working with Apache; they might even
+work.
+
+You must run Sponge on a different server than Pulp; a WSGI wizard
+might be able to get them both running on the same box, but that
+wizard ain't me.
+
+So:
+
+1.  Grab the celeryd and celerybeat init scripts from Github:
+
+wget -O /etc/init.d/celerybeat https://raw.github.com/ask/celery/2.4/contrib/generic-init.d/celerybeat
+wget -O /etc/init.d/celeryd https://raw.github.com/ask/celery/master/contrib/generic-init.d/celeryd
+
+2.  Create a "celery" user and group and ensure that it can write to
+your Pulp client log:
+
+useradd -c "Celery user" -r -s /sbin/nologin -U celery
+chgrp celery /var/log/pulp /var/log/pulp/client.log
+chmod 0775 /var/log/pulp /var/log/pulp/client.log
+
+3.  Create some necessary directories:
+
+mkdir -p /var/log/celery /var/run/celery
+chmod 0755 /var/log/celery /var/run/celery
+chown celery:celery /var/log/celery /var/run/celery
+
+4.  Create /etc/sysconfig/celeryd and /etc/sysconfig/celerybeat.  You
+can find the full docs for those files at
+http://ask.github.com/celery/cookbook/daemonizing.html; here are mine:
+
+% less /etc/sysconfig/celeryd   
+CELERYD_NODES="w1"
+CELERYD_CHDIR="/usr/lib/python2.6/site-packages/Sponge"
+CELERYD_MULTI="$CELERYD_CHDIR/manage.py celeryd_multi"
+CELERYD_OPTS="--time-limit=300 --concurrency=4"
+CELERYCTL_OPTS="--config=Sponge.settings"
+CELERYD_LOG_FILE="/var/log/celery/celeryd.log"
+CELERYD_PID_FILE="/var/run/celery/celeryd.pid"
+CELERYD_USER="celery"
+CELERYD_GROUP="celery"
+export DJANGO_SETTINGS_MODULE="settings"
+
+% less /etc/sysconfig/celerybeat
+CELERYD_CHDIR="/usr/lib/python2.6/site-packages/Sponge"
+CELERYBEAT="$CELERYBEAT_CHDIR/manage.py celerybeat"
+CELERYBEAT_OPTS="-S djcelery.schedulers.DatabaseScheduler"
+CELERYBEAT_LOG_FILE="/var/log/celery/celerybeat.log"
+CELERYBEAT_PID_FILE="/var/run/celery/celerybeat.pid"
+CELERYBEAT_USER="celery"
+CELERYBEAT_GROUP="celery"
+export DJANGO_SETTINGS_MODULE="settings"
+
+5.  In RHEL 6, the Celery egg has what appears to me to be a bogus
+requirement on python-dateutil >= 1.5.0.  At least, nothing used by
+Sponge requires 1.5, and RHEL 6 ships with 1.4.1.  Edit
+/usr/lib/python2.6/site-packages/celery-2.2.7-py2.6.egg-info/requires.txt
+and change that line to python-dateutil>=1.4.0,<2.0.0:
+
+sed -i 's/python-dateutil>=1.5.0/python-dateutil>=1.4.0/' \
+    /usr/lib/python2.6/site-packages/celery-2.2.7-py2.6.egg-info/requires.txt
+
+6.  Create a .pulp directory for the 'apache' user:
+
+mkdir ~apache/.pulp
+chmod 0755 ~apache/.pulp
+chown apache:apache ~apache/.pulp
+
+7.  Configure Apache to run the WSGI app and to read the media.  Here's the Apache config I use:
+
+% less /etc/httpd/conf.d/wsgi_sponge.conf
+NameVirtualHost *:80
+
+<VirtualHost *:80>
+  RewriteEngine On
+  RewriteCond %{SERVER_PORT} ^80$
+  RewriteRule ^(.*) https://sponge.example.com$1 [R,L]
+</VirtualHost>
+
+<IfModule mod_wsgi.c>
+  WSGIScriptAlias / "/usr/share/sponge/sponge.wsgi"
+
+  WSGISocketPrefix run
+  WSGIDaemonProcess Sponge processes=1 threads=10
+  WSGIProcessGroup Sponge
+
+  Alias "/media/" "/usr/share/sponge/media/"
+  <Directory "/usr/share/sponge/">
+    Options None
+    AllowOverride None
+  </Directory>
+</IfModule>
+
+8.  Start and/or restart the necessary services:
+
+service celeryd start
+service celerybeat start
+service rabbitmq-server start
+service httpd restart
+
+The settings.py shipped with Sponge should not _require_ any changes,
+although you may wish to make some.  (E.g., if you're running under
+Apache, you'll probably not want to use SQLite.  And you'll probably
+also want to change the secret key, turn off debug mode, etc.)
+
+This still doesn't 
