@@ -9,6 +9,8 @@
 <li><a href="{% url sponge.views.repos.rebuild_metadata repo_id=repo.id %}?next={% url sponge.views.repos.view repo_id=repo.id %}">Rebuild metadata</a></li>
 <li><a href="{% url sponge.views.repos.clone repo_id=repo.id %}">Clone</a></li>
 <li><a href="{% url sponge.views.repos.delete repo_id=repo.id %}">Delete</a></li>
+<li><a href="{% url sponge.views.repos.promote_select repo_id=repo.id %}">Promote to</a></li>
+<li><a href="{% url sponge.views.repos.demote_select repo_id=repo.id %}">Demote from</a></li>
 <li><form action="" method="post">{% csrf_token %}Diff with {{ diffform.repo2 }} <button type="submit" name="diffselect">Diff</button></form></li>
 {% endblock actions %}
 
@@ -136,7 +138,7 @@
 </div>
 
 {% if packages %}
-<h2>Packages</h2>
+<h2>Packages ({{ packages|length }})</h2>
 {% else %}
 No packages
 {% endif %}

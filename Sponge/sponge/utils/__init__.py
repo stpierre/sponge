@@ -34,7 +34,8 @@ def get_pulp_server(user=None, new=False):
         if os.path.exists(bundle.crtpath()):
             server.active_server.set_ssl_credentials(bundle.crtpath())
         else:
-            raise IOError("No Pulp certificate found for %s" % user)
+            raise IOError("No Pulp certificate found for %s at %s" %
+                          (user, bundle.crtpath()))
 
         # make a quick and easy API call to verify that the session is
         # still active

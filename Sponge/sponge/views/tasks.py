@@ -1,4 +1,5 @@
 import logging
+from sponge.utils import messages
 from sponge.utils.decorators import template
 from sponge.forms import DeleteOkayForm
 from sponge.models import CeleryTaskTracker
@@ -10,14 +11,14 @@ logger = logging.getLogger(__name__)
 
 @template("tasks.html")
 def list(request):
-    tasks = []
+    tasktable = []
     tasklist = CeleryTaskTracker.objects.filter(owner=request.user.username)
     for task in tasklist:
         tclass = getattr(tasks, task.taskclass)
-        tasks.append(dict(id=task.taskid,
-                          tclass=task.taskclass,
-                          status=tclass.AsyncResult(task.taskid)))
-    return dict(tasks=tasks)
+        tasktable.append(dict(id=task.taskid,
+                              tclass=task.taskclass,
+                              status=tclass.AsyncResult(task.taskid)))
+    return dict(tasks=tasktable)
 
 @template("deletetask.html")
 def delete(request, task_id=None):

@@ -15,18 +15,13 @@
   <tr class="{% cycle "odd" "even" %}">
     <td>{{ task.id }}</td>
     <td>{{ task.tclass }}</td>
-    <td>{{ task.status }}</td>
+    <td>{{ task.status.state }}
+      {% if task.status.info %}: {{ task.status.info }}{% endif %}</td>
     <td class="actions">
-      <a href="{% url sponge.views.tasks.clone task_id=task.id %}">cancel</a>
+      <a href="{% url sponge.views.tasks.delete task_id=task.id %}">cancel</a>
     </td>
   </tr>
 {% endfor %}
 {% endblock tablebody %}
-{% else %}
-
-{% block content %}
-No currently running tasks.
-{% endblock content %}
-
 {% endif %}
 

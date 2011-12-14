@@ -113,7 +113,7 @@ td.diff {
     float: left;
     font-size: 10pt;
     font-weight: bold;
-    width: 15em;
+    width: 25em;
     margin-right: 5px;
 }
 
@@ -140,7 +140,7 @@ td.diff {
 
 .form .checkboxSelect input, .form .checkboxSelect li label {
     width: auto;
-    font-weight: normal;    
+    font-weight: normal;
 }
 
 .helpText {

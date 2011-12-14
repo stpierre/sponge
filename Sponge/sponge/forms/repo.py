@@ -46,8 +46,6 @@ class RepoAddForm(forms.Form):
     url = forms.CharField("Feed URL")
     groups = forms.MultipleChoiceField(label="Groups",
                                        required=False,
-                                       choices=[(g, g)
-                                                for g in group_utils.get_groups()],
                                        widget=widgets.CheckboxSelectMultiple())
     newgroups = \
         forms.CharField(label="New Groups",
@@ -55,9 +53,16 @@ class RepoAddForm(forms.Form):
                         help_text="Add new repository groups, separated by commas")
     filters = forms.MultipleChoiceField(label="Filters",
                                         required=False,
-                                        choices=[(fid, f['description'])
-                                                 for fid, f in filter_utils.list_filters().items()],
                                         widget=widgets.CheckboxSelectMultiple())
+
+    def __init__(self, *args, **kwargs):
+        forms.Form.__init__(self, *args, **kwargs)
+
+        self.fields['groups'].choices = [(g, g)
+                                         for g in group_utils.get_groups()]
+        self.fields['filters'].choices = \
+            [(fid, f['description'])
+             for fid, f in filter_utils.list_filters().items()]
 
 
 class RepoEditBase(forms.Form):

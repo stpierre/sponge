@@ -1,5 +1,7 @@
+import sys
 import re
 import logging
+import cPickle
 from sponge.utils import messages, get_config, repo as repo_utils
 from sponge.utils.decorators import template
 from sponge.forms import DeleteOkayForm
@@ -12,7 +14,6 @@ from sponge.models import PackageSet, PackageSetRepo, PackageSetPackage
 from django.http import HttpResponseRedirect
 from django.core.urlresolvers import reverse
 from pulp.client.api.repository import RepositoryAPI
-from pulp.client.api.service import ServiceAPI
 from pulp.client.api.server import ServerRequestError
 
 logger = logging.getLogger(__name__)
@@ -160,20 +161,32 @@ def delete(request, repo_id=None):
 def promote_select(request, repo_id=None):
     repo = repo_utils.get_repo(repo_id)
     form = PromotePackageSelectionForm(request.POST or None, repo=repo)
-    if request.method == 'POST':
+    if request.method == 'POST' and form.is_valid():
         repoapi = RepositoryAPI()
-        pset = repo_utils.package_select(request, repo=repo,
-                                         stype="promote",
-                                         formcls=PromotePackageSelectionForm)
-        packages = PackageSetPackage.objects.filter(packageset=pset.pk)
+        pset = PackageSet.objects.create(stype="promote")
+        pset.save()
+        prepo = PackageSetRepo.objects.create(packageset=pset,
+                                              repoid=repo['id'],
+                                              name=repo['name'])
+        prepo.save()
+        packages = []
+        for pkg in repoapi.packages(repo['parent']['id']):
+            if pkg['id'] in form.cleaned_data['packages']:
+                packages.append(pkg)
+                pspkg = \
+                    PackageSetPackage.objects.create(packageset=pset,
+                                                     packageid=pkg['id'],
+                                                     pkgobj=cPickle.dumps(pkg))
+                pspkg.save()
+
         deps = repo_utils.resolve_deps(packages,
                                        [repo['parent']['id']],
                                        pkgfilter=repoapi.packages(repo['id']))
         for pkg in deps:
-            pkg = PackageSetPackage.objects.create(packageset=pset,
-                                                   packageid=pkg['id'],
-                                                   nevra=repo_utils.get_nevra(pkg))
-            pkg.save()
+            pspkg = PackageSetPackage.objects.create(packageset=pset,
+                                                     packageid=pkg['id'],
+                                                     pkgobj=cPickle.dumps(pkg))
+            pspkg.save()
         return HttpResponseRedirect(reverse('sponge.views.repos.promote_ok',
                                             kwargs=dict(pid=pset.pk)))
     packages = repo_utils.get_updates(repo)
@@ -192,15 +205,16 @@ def promote_ok(request, pid=None):
     form = PromoteOkayForm(request.POST or None, pset=pset)
     if request.POST:
         repoapi = RepositoryAPI()
-        packages = PackageSetPackage.objects.filter(packageset=pset.pk)
+        packages = \
+            [cPickle.loads(str(p.pkgobj))
+             for p in PackageSetPackage.objects.filter(packageset=pset.pk)]
         success = True
         logger.info("Promoting %s to repo(s) %s" %
-                    ([p.packageid for p in packages],
-                     [r.repoid for r in repos]))
+                    ([p['id'] for p in packages], [r.repoid for r in repos]))
         for repo in repos:
             try:
                 errors = repoapi.add_package(repo.repoid,
-                                             [p.packageid for p in packages])
+                                             [p['id'] for p in packages])
                 for error in errors:
                     if error[4]:
                         success = False
@@ -212,14 +226,16 @@ def promote_ok(request, pid=None):
                 messages.error(request,
                                "Failed to add packages to %s (%s): %s" %
                                (repo.repoid,
-                                ", ".join([p.nevra for p in packages]),
+                                ", ".join([repo_utils.get_nevra(p)
+                                           for p in packages]),
                                 err[1]))
 
         if success:
             messages.success(request,
                              "Successfully added packages to repo(s) %s: %s" %
                              (",".join([r.name for r in repos]),
-                              ", ".join([p.nevra for p in packages])))
+                              ", ".join([repo_utils.get_nevra(p)
+                                         for p in packages])))
         pset.delete()
         if len(repos) == 1:
             nexturl = reverse("sponge.views.repos.view",
@@ -248,9 +264,10 @@ def promote_package(request, repo_id=None, package=None):
                                                        repoid=prepo['id'],
                                                        name=prepo['name'])
                 psrepo.save()
-            pkg = PackageSetPackage.objects.create(packageset=pset,
-                                                   packageid=pkgid,
-                                                   nevra=repo_utils.get_nevra(package))
+            pkg = \
+                PackageSetPackage.objects.create(packageset=pset,
+                                                 packageid=package['id'],
+                                                 pkgobj=cPickle.dumps(package))
         pkg.save()
         return dict(repo=repo, package=package, form=form)
     else:
@@ -261,8 +278,8 @@ def promote_package(request, repo_id=None, package=None):
                                               name=repo['name'])
         prepo.save()
         pkg = PackageSetPackage.objects.create(packageset=pset,
-                                               packageid=pkgid,
-                                               nevra=repo_utils.get_nevra(package))
+                                               packageid=package['id'],
+                                               pkgobj=cPickle.dumps(package))
         pkg.save()
         return HttpResponseRedirect(reverse("sponge.views.repos.promote_ok",
                                             kwargs=dict(pid=pset.pk)))
@@ -271,10 +288,21 @@ def promote_package(request, repo_id=None, package=None):
 def demote_select(request, repo_id=None):
     repo = repo_utils.get_repo(repo_id)
     form = DemotePackageSelectionForm(request.POST or None, repo=repo)
-    if request.method == 'POST':
-        pset = repo_utils.package_select(request, repo=repo,
-                                         stype="demote",
-                                         formcls=DemotePackageSelectionForm)
+    if request.method == 'POST' and form.is_valid():
+        pset = PackageSet.objects.create(stype="demote")
+        pset.save()
+        prepo = PackageSetRepo.objects.create(packageset=pset,
+                                              repoid=repo['id'],
+                                              name=repo['name'])
+        prepo.save()
+        repoapi = RepositoryAPI()
+        for pkg in repoapi.packages(repo['id']):
+            if pkg['id'] in form.cleaned_data['packages']:
+                pspkg = \
+                    PackageSetPackage.objects.create(packageset=pset,
+                                                     packageid=pkg['id'],
+                                                     pkgobj=cPickle.dumps(pkg))
+                pspkg.save()
         return HttpResponseRedirect(reverse('sponge.views.repos.demote_ok',
                                             kwargs=dict(pid=pset.pk)))
     else:
@@ -289,23 +317,15 @@ def demote_ok(request, pid=None):
     
     if request.method == 'POST':
         repoapi = RepositoryAPI()
-        packages = PackageSetPackage.objects.filter(packageset=pset.pk)        
+        packages = [cPickle.loads(str(p.pkgobj))
+                    for p in PackageSetPackage.objects.filter(packageset=pset.pk)]
         success = True
         
         for repo in repos:
             logger.info("Deleting %s from repo %s" %
-                        ([p.nevra for p in packages], repo.repoid))
-            for pkgobj in packages:
-                package = repo_utils.get_package(repo.repoid,
-                                                 id=pkgobj.packageid)
-
-                if package is None:
-                    success = False
-                    messages.warning(request,
-                                     "Failed to load package object for %s" %
-                                     pkg.nevra)
-                    continue
-            
+                        ([repo_utils.get_nevra(p) for p in packages],
+                         repo.repoid))
+            for package in packages:
                 try:
                     if not repoapi.remove_package(repo.repoid,
                                                   pkgobj=[package]):
@@ -325,7 +345,8 @@ def demote_ok(request, pid=None):
         if success:
             messages.success(request,
                              "Successfully removed %s from %s" %
-                             (", ".join([p.nevra for p in packages]),
+                             (", ".join([repo_utils.get_nevra(p)
+                                         for p in packages]),
                               ", ".join([r.name for r in repos])))
         pset.delete()
         if len(repos) == 1:
@@ -349,8 +370,8 @@ def demote_package(request, repo_id=None, package=None):
                                           name=repo['name'])
     prepo.save()
     pkg = PackageSetPackage.objects.create(packageset=pset,
-                                           packageid=pkgid,
-                                           nevra=repo_utils.get_nevra(package))
+                                           packageid=package['id'],
+                                           pkgobj=cPickle.dumps(package))
     pkg.save()
     return HttpResponseRedirect(reverse("sponge.views.repos.demote_ok",
                                         kwargs=dict(pid=pset.pk)))

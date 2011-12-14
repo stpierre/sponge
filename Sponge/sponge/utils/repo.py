@@ -2,6 +2,7 @@
 
 import os
 import time
+import cPickle
 import logging
 import datetime
 import threading
@@ -175,19 +176,8 @@ def resolve_deps(packages, repos, pkgfilter=None):
         pkgfilter = []
     
     serviceapi = ServiceAPI()
-
-    # abstraction layer to make resolve_deps work with either a list
-    # of PackageSetPackage objects or a list of JSON objects from Pulp
-    nevras = []
-    for pkg in packages:
-        try:
-            nevras.append(pkg.nevra)
-        except AttributeError:
-            nevras.append(get_nevra(pkg))
-        except (TypeError, KeyError):
-            pass
-
-    deps = serviceapi.dependencies(nevras, repos, recursive=True)
+    deps = serviceapi.dependencies([get_nevra(p) for p in packages],
+                                   repos, recursive=True)
     child_nevras = [get_nevra(p) for p in pkgfilter]
     for dep in deps['resolved'].values():
         for pkg in dep:
@@ -195,23 +185,6 @@ def resolve_deps(packages, repos, pkgfilter=None):
                 rv.append(pkg)
 
     return rv
-
-def package_select(request, repo=None, stype=None, formcls=None):
-    form = formcls(request.POST, repo=repo)
-    if form.is_valid():
-        pset = PackageSet.objects.create(stype=stype)
-        pset.save()
-        prepo = PackageSetRepo.objects.create(packageset=pset,
-                                              repoid=repo['id'],
-                                              name=repo['name'])
-        prepo.save()
-        for pkgid, act in form.cleaned_data.items():
-            if act:
-                pkg = PackageSetPackage.objects.create(packageset=pset,
-                                                       packageid=pkgid,
-                                                       nevra=form.fields[pkgid].label)
-                pkg.save()
-        return pset
 
 def sort_repos_by_ancestry(repos, parent=None):
     rv = []

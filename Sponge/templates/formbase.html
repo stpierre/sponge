@@ -1,5 +1,17 @@
 {% extends "base.html" %}
 
+{% block js %}
+$(document).ready(function () {
+    $('.checkall').toggle(function () {
+	$(this).parents('form').find(':checkbox').attr('checked', 'checked');
+        $(this).val("Unselect All");
+    },function () {
+	$(this).parents('form').find(':checkbox').removeAttr('checked');
+        $(this).val("Select All");
+    });
+});
+{% endblock js %}
+
 {% block content %}
 {% block formdescription %}<p></p>{% endblock formdescription %}
 
@@ -19,7 +31,11 @@
       checkboxSelect
     {% endif %}
   {% endif %}">
-    <label for="{{ field.html_name }}"{% if field.field.required %} class="required"><span class="required">*</span>{% else %}>{% endif %}{{ field.label }}</label> {{ field }}
+    <label for="{{ field.html_name }}"{% if field.field.required %} class="required"><span class="required">*</span>{% else %}>{% endif %}{{ field.label }}</label>
+  {% if "checkboxselectmultiple" in field.field.widget|lower %}
+    <button class="checkall">Select All</button>
+  {% endif %}
+{{ field }}
     <div class="fieldErrors">{{ field.errors }}</div>
     <div class="helpText">{{ field.help_text }}</div>
   </div>

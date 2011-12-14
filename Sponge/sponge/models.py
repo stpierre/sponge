@@ -15,7 +15,7 @@ class PackageSetRepo(models.Model):
 class PackageSetPackage(models.Model):
     packageset = models.ForeignKey(PackageSet)
     packageid = models.CharField(max_length=255)
-    nevra = models.CharField(max_length=255)
+    pkgobj = models.TextField()
 
 
 class CeleryTaskTracker(models.Model):

@@ -1,6 +1,18 @@
 {% extends "formbase.html" %}
-{% block title %}Demote from {{ repo.name }}{% endblock %}
-{% block pagetitle %}Demote packages from {{ repo.name }}{% endblock %}
+{% block title %}
+{% if repos|length == 1 %}
+Demote from {{ repos.0.name }}
+{% else %}
+Demote Packages
+{% endif %}
+{% endblock title %}
+{% block pagetitle %}
+{% if repos|length == 1 %}
+Demote from {{ repos.0.name }}
+{% else %}
+Demote from {{ repos|length }} repositories
+{% endif %}
+{% endblock %}
 
 {% block formdescription %}
 {% if repos|length == 1 %}

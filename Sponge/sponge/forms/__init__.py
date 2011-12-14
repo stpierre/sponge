@@ -1,11 +1,6 @@
 from django import forms
 from django.forms import widgets
 from django.utils.safestring import mark_safe
-from sponge.utils import repo as repo_utils
-from sponge.utils import filter as filter_utils
-from sponge.utils import group as group_utils
-from sponge.models import PackageSetPackage
-from pulp.client.api.repository import RepositoryAPI
 import logging
 
 logger = logging.getLogger(__name__)
