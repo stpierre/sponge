@@ -1,0 +1,9 @@
+The development of Sponge has been a long and occasionally hilarious
+and/or frustrating process.  The main players have been:
+
+Chris St. Pierre developed this iteration of Sponge and worked on the
+workflow that led to Sponge.
+
+Matt Hermanson helped develop the first iteration of Sponge (which was
+scrapped when we discovered Pulp, but bits of the code found their way
+into this iteration) and worked on the workflow that led to Sponge.
