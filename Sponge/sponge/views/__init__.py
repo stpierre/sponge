@@ -6,6 +6,7 @@ from sponge.utils import SpongeBundle, messages, set_rebalance_schedule, \
      config as config_utils
 from sponge.utils.decorators import template, superuser_required
 from sponge.forms.config import ConfigForm
+from sponge.tasks import RebalanceSyncSchedule
 
 __all__ = ["repos", "filters", "logout"]
 
@@ -27,5 +28,6 @@ def configure(request):
             for name, value in form.cleaned_data.items():
                 config_utils.set(name, value)
             messages.success(request, "Configuration options set")
-            set_rebalance_schedule()
+            #set_rebalance_schedule()
+            RebalanceSyncSchedule.delay(user=request.user.username)
     return dict(form=form)

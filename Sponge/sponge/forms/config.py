@@ -1,44 +1,30 @@
 from django import forms
 from django.forms import widgets
-from django.forms.forms import pretty_name
 from sponge.utils import config as config_utils
-
-class ConfigItem(object):
-    def __init__(self, name, label=None, default=None, description=None,
-                 field=None, widget=None):
-        self.name = name
-        if label is None:
-            self.label = pretty_name(name)
-        else:
-            self.label = label
-        self.default = default
-        self.description = description
-        if field is None:
-            self.field = forms.CharField
-        else:
-            self.field = field
-        self.widget = widget
-
+from sponge.utils import group as group_utils
 
 class ConfigForm(forms.Form):
+    scheduler_username = forms.CharField(help_text="The username of a Pulp user who can modify all sync schedules. Granting 'read' and 'update' on '/repositories/' should be sufficient.")
+    scheduler_password = forms.CharField(help_text="The password for the sync schedule user",
+                                         widget=widgets.PasswordInput(),
+                                         required=False)
+
     def __init__(self, *args, **kwargs):
         forms.Form.__init__(self, *args, **kwargs)
-        for item in _config_items:
-            self.fields[item.name] = \
-                item.field(label=item.label,
-                           initial=config_utils.get(item.name,
-                                                    item.default),
-                           help_text=item.description,
-                           widget=item.widget)
 
+        self.fields['scheduler_username'].initial = \
+            config_utils.get('scheduler_username', None)
 
-_config_items = \
-    [ConfigItem("sync_frequency",
-                default=24,
-                description="The frequency, in hours, with which to sync all repositories",
-                field=forms.IntegerField),
-     ConfigItem("scheduler_username",
-                description="The username of a Pulp user who can modify all sync schedules. Granting 'read' and 'update' on '/repositories/' should be sufficient."),
-     ConfigItem("scheduler_password",
-                description="The password for the sync schedule user",
-                widget=widgets.PasswordInput())]
+        # i wish django supported fieldsets
+        for group in group_utils.get_groups():
+            cname = "sync_frequency_%s" % group
+            self.fields[cname] = \
+                forms.IntegerField(label="Sync frequency for %s" % group,
+                                   help_text="The frequency, in hours, with which to sync all repositories in group %s" % group,
+                                   initial=config_utils.get(cname, 24))
+
+        if "default" not in group_utils.get_groups():
+            self.fields['default'] = \
+                forms.IntegerField(label="Default sync frequency",
+                                   help_text="If a machine is in no groups, the frequency, in hours, with which to sync it",
+                                   initial=config_utils.get("sync_frequency_default", 24))

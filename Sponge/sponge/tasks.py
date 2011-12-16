@@ -22,6 +22,8 @@ class TrackedTask(Task):
         return self.update_state(state=state, meta=msg)
 
     def __call__(self, *args, **kwargs):
+        # if you don't provide "user" as a kwarg, this just acts like
+        # a normal ol' boring task
         if "user" in kwargs:
             user = kwargs.pop("user")
             CeleryTaskTracker.objects.create(taskid=self.request.id,
@@ -232,7 +234,7 @@ class RebuildMetadata(TrackedTask):
 tasks.register(RebuildMetadata)
 
 
-class RebalanceSyncSchedule(Task):
+class RebalanceSyncSchedule(TrackedTask):
     def run(self):
         errors = []
         if repo_utils.rebalance_sync_schedule(errors):
@@ -242,5 +244,3 @@ class RebalanceSyncSchedule(Task):
                                       ", ".join(errors))
 
 tasks.register(RebalanceSyncSchedule)
-
-logger.error("tasks: %s" % registry.tasks.regular().keys())

@@ -386,60 +386,96 @@ def rebalance_sync_schedule(errors=None):
         else:
             return 0
 
-    repos = get_repos().values()
-    # sort list by package count ascending.  this a) puts the
-    # repos in the same order every day so that repos don't go 47
-    # hours without being synced; and b) does the heavy lifting
-    # early in the morning
-    repos.sort(by_package_count)
-    repos.reverse()
+    repos = get_repos()
 
-    cycletime = 60 * 60 * int(config.get("sync_frequency"))
-
-    # we count the total number of packages in all repos, and divide
-    # them evenly amongst the timespan allotted.  It's worth noting
-    # that we count clones just the same as we count "regular" repos,
-    # because it's createrepo, not the sync, that really takes a lot
-    # of time and memory.
-    pkgs = 0
-    for repo in repos:
-        if repo['package_count'] < 10:
-            # we still have to run createrepo even if there are very
-            # few (or no!) packages, so count very small repos as 10
-            # packages
-            pkgs += 10
+    # get a list of sync frequencies
+    syncgroups = dict()  # dict of sync time -> [groups]
+    default = None
+    for ckey, sync in config.list(filter=dict(name__startswith="sync_frequency_")).items():
+        group = ckey.replace("sync_frequency_", "")
+        if sync is None:
+            logger.error("Sync frequency for %s is None, skipping" % group)
+            continue
+        synctime = 60 * 60 * int(sync)
+        if "group" == "default":
+            default = synctime
         else:
-            pkgs += repo['package_count']
-    
-    try:
-        pkgtime = float(cycletime) / pkgs
-    except ZeroDivisionError:
-        pkgtime = 1
-    logger.debug("Allowing %s seconds per package" % pkgtime)
+            try:
+                syncgroups[synctime].append(group)
+            except KeyError:
+                syncgroups[synctime] = [group]
 
-    # find tomorrow morning at 12:00 am
-    tomorrow = datetime.datetime.today() + datetime.timedelta(days=1)
-    start = datetime.datetime(tomorrow.year,
-                              tomorrow.month,
-                              tomorrow.day)
+    # divide the repos up by sync time and sort them by package count
+    # ascending.  this a) puts the repos in the same order every day
+    # so that repos don't go ($synctime * 2 - 1) hours without being
+    # synced; and b) does the heavy lifting early in the morning
+    cycles = dict() # dict of repo -> sync time
+    for repo in repos.values():
+        cycles[repo['id']] = default
+        for synctime, groups in syncgroups.items():
+            if (set(groups) & set(repo['groupid']) and
+                (cycles[repo['id']] is None or
+                 synctime > cycles[repo['id']])):
+                cycles[repo['id']] = synctime
 
-    if errors is None:
-        errors = []
-    for repo in repos:
-        iso8601_start = format_iso8601_datetime(start)
-        iso8601_interval = \
-            format_iso8601_interval(datetime.timedelta(seconds=cycletime))
-        logger.debug("Scheduling %s to start at %s, sync every %s" %
-                     (repo['id'], iso8601_start, iso8601_interval))
-        schedule = parse_interval_schedule(iso8601_interval,
-                                           iso8601_start,
-                                           None)
+    # finally, build a dict of sync time -> [repos]
+    syncs = dict()
+    for repoid, synctime in cycles.items():
+        if synctime is None:
+            continue
         try:
-            set_schedule(repo, schedule)
-        except ServerRequestError, err:
-            errors.append("Could not set schedule for %s: %s" %
-                          (repo['id'], err[1]))
+            syncs[synctime].append(repos[repoid])
+        except KeyError:
+            syncs[synctime] = [repos[repoid]]
+
+    for synctime, syncrepos in syncs.items():
+        syncrepos.sort(by_package_count)
+        syncrepos.reverse()
+
+        # we count the total number of packages in all repos, and
+        # divide them evenly amongst the timespan allotted.  It's
+        # worth noting that we count clones just the same as we count
+        # "regular" repos, because it's createrepo, not the sync, that
+        # really takes a lot of time and memory.
+        pkgs = 0
+        for repo in syncrepos:
+            if repo['package_count'] < 10:
+                # we still have to run createrepo even if there are
+                # very few (or no!) packages, so count very small
+                # repos as 10 packages
+                pkgs += 10
+            else:
+                pkgs += repo['package_count']
+    
+        try:
+            pkgtime = float(synctime) / pkgs
+        except ZeroDivisionError:
+            pkgtime = 1
+            logger.debug("Allowing %s seconds per package" % pkgtime)
+
+        # find tomorrow morning at 12:00 am
+        tomorrow = datetime.datetime.today() + datetime.timedelta(days=1)
+        start = datetime.datetime(tomorrow.year, tomorrow.month, tomorrow.day)
+
+        if errors is None:
+            errors = []
+
+        for repo in syncrepos:
+            iso8601_start = format_iso8601_datetime(start)
+            iso8601_interval = \
+                format_iso8601_interval(datetime.timedelta(seconds=synctime))
+            logger.debug("Scheduling %s to start at %s, sync every %s" %
+                         (repo['id'], iso8601_start, iso8601_interval))
+            schedule = parse_interval_schedule(iso8601_interval,
+                                               iso8601_start,
+                                               None)
+
+            try:
+                set_schedule(repo, schedule)
+            except ServerRequestError, err:
+                errors.append("Could not set schedule for %s: %s" %
+                              (repo['id'], err[1]))
             
-        start += datetime.timedelta(seconds=int(pkgtime *
-                                                repo['package_count']))
+            start += datetime.timedelta(seconds=int(pkgtime *
+                                                    repo['package_count']))
     return not errors

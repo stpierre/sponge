@@ -16,3 +16,10 @@ def get(name, default=None):
         return item.value
     except Configuration.DoesNotExist:
         return default
+
+def list(filter=None):
+    if filter:
+        items = Configuration.objects.filter(**filter)
+    else:
+        items = Configuration.objects.all()
+    return dict([(i.name, i.value) for i in items])

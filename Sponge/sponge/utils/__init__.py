@@ -48,8 +48,11 @@ def get_config():
     return ConsumerConfig()
 
 def set_rebalance_schedule(errors=None):
+    syncs = config.list(filter=dict(name__startswith="sync_frequency_"))
+    
     schedule = \
-        IntervalSchedule.objects.create(every=int(config.get("sync_frequency")),
+        IntervalSchedule.objects.create(every=max([int(v)
+                                                   for v in syncs.values()]),
                                         period="hours")
     PeriodicTask.objects.create(name="rebalance_sync_schedule",
                                 task="sponge.tasks.RebalanceSyncSchedule")
