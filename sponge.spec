@@ -31,7 +31,7 @@ rm -rf %{buildroot}
 cp -R %{name}.wsgi media %{buildroot}%{_datadir}/%{name}
 
 %{__mkdir_p} %{buildroot}%{python_sitelib}
-cp -R src/Sponge %{buildroot}%{python_sitelib}
+cp -R Sponge %{buildroot}%{python_sitelib}
 
 %{__mkdir_p} %{buildroot}%{_defaultdocdir}/%{name}-%{version}
 cp README* %{buildroot}%{_defaultdocdir}/%{name}-%{version}
