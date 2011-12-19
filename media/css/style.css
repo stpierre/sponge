@@ -135,6 +135,7 @@ td.diff {
 }
 
 .form .checkboxSelect ul {
+    list-style-type: none;
     float: left;
 }
 
