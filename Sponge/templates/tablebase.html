@@ -5,8 +5,7 @@
 {% block js %}
 $(document).ready(function() {
     $("table#table0").tablesorter();
-    $("input#search").quicksearch('table tbody tr',
-                                  {selector: 'th' });
+    $("input#search").quicksearch('table#table0 tbody tr');
 });
 {% endblock %}
 
