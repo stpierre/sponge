@@ -4,6 +4,7 @@
 
 {% block tablehead %}
 <th>Repository</th>
+<th>Groups</th>
 <th>Packages</th>
 <th>Actions</th>
 {% endblock tablehead %}
@@ -14,6 +15,7 @@
     <td>
       <a href="{% url sponge.views.repos.view repo_id=repo.id %}">{{ repo.name }}</a>
     </td>
+    <td>{{ repo.groupid|join:", " }}</td>
     <td>{{ repo.package_count }}</td>
     <td class="actions">
       {% if repo.parent %}
