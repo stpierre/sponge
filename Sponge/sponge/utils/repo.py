@@ -257,7 +257,8 @@ def set_groups(repo, groups, request=None, errors=None):
             try:
                 repoapi.add_group(repo['id'], group)
                 if request:
-                    messages.debug("Added group %s to %s" %
+                    messages.debug(request,
+                                   "Added group %s to %s" %
                                    (group, repo['id']))
             except ServerRequestError, err:
                 errors.append("Could not add group %s to %s: %s" %
@@ -293,7 +294,8 @@ def set_filters(repo, filters, request=None, errors=None):
         try:
             repoapi.add_filters(repo['id'], to_add)
             if request:
-                messages.debug("Added filters %s to %s" %
+                messages.debug(request,
+                               "Added filters %s to %s" %
                                (to_add, repo['id']))
         except ServerRequestError, err:
             errors.append("Could not add filters %s to %s: %s" %
