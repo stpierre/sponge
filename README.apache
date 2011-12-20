@@ -71,7 +71,8 @@ mkdir ~apache/.pulp
 chmod 0755 ~apache/.pulp
 chown apache:apache ~apache/.pulp
 
-7.  Configure Apache to run the WSGI app and to read the media.  Here's the Apache config I use:
+7.  Configure Apache to run the WSGI app and to read the media.
+Here's the Apache config I use:
 
 % less /etc/httpd/conf.d/wsgi_sponge.conf
 NameVirtualHost *:80
@@ -94,6 +95,8 @@ NameVirtualHost *:80
     Options None
     AllowOverride None
   </Directory>
+
+  Alias "/favicon.ico" "/var/www/html/favicon.ico"
 </IfModule>
 
 8.  Start and/or restart the necessary services:
