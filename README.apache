@@ -18,10 +18,10 @@ wget -O /etc/init.d/celerybeat https://raw.github.com/ask/celery/2.4/contrib/gen
 wget -O /etc/init.d/celeryd https://raw.github.com/ask/celery/master/contrib/generic-init.d/celeryd
 
 2.  Create a "celery" user and group and ensure that it can write to
-your Pulp client log:
+your Pulp client log and read your Sponge client certs:
 
 useradd -c "Celery user" -r -s /sbin/nologin -U celery
-chgrp celery /var/log/pulp /var/log/pulp/client.log
+chgrp celery /var/log/pulp /var/log/pulp/client.log /var/lib/sponge
 chmod 0775 /var/log/pulp /var/log/pulp/client.log
 
 3.  Create some necessary directories:
