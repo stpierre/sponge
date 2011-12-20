@@ -18,15 +18,16 @@ class DisplayWidget(widgets.Input):
         return value
 
 
-class CloneIdWidget(widgets.TextInput):
-    def __init__(self, parent_id, attrs=None):
+class CloneWidget(widgets.TextInput):
+    def __init__(self, append, separator='-', attrs=None):
         widgets.TextInput.__init__(self, attrs=attrs)
-        self.parent_id = parent_id
+        self.append = append
+        self.separator = separator
     
     def render(self, name, value, attrs=None):
         widget = widgets.TextInput.render(self, name, value, attrs=attrs)
-        if self.parent_id:
-            return mark_safe("%s-%s" % (widget, self.parent_id))
+        if self.append:
+            return mark_safe(widget + self.separator + self.append)
         else:
             return widget
 

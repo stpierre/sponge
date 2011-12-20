@@ -210,7 +210,11 @@ def set_schedule(repo, schedule):
     reload_repo(repo['id'])
     return repo
 
-restore_schedule = set_schedule
+def restore_schedule(repo, schedule):
+    if schedule is None:
+        return repo
+    else:
+        return set_schedule(repo, schedule)
 
 def get_branch_id(repo):
     """ get the repo id of a whole branch -- basically, of the
@@ -221,6 +225,16 @@ def get_branch_id(repo):
         return get_branch_id(repo['parent'])
     else:
         return repo['id']
+
+def get_branch_name(repo):
+    """ get the repo name of a whole branch -- basically, of the
+    ultimate ancestor.  for instance,
+    get_branch_name('infra-stable-generic-6-x86_64-hp') should return
+    'Generic 6 x86_64 - HP' """
+    if repo['parent']:
+        return get_branch_name(repo['parent'])
+    else:
+        return repo['name']
 
 def set_groups(repo, groups, request=None, errors=None):
     repoapi = RepositoryAPI()

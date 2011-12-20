@@ -126,10 +126,13 @@ def clone(request, repo_id=None):
                             re.split(r'\s*,\s*',
                                      form.cleaned_data['newgroups']))
 
-            clone_id = "%s-%s" % (form.cleaned_data["clone_id"], repo['id'])
+            clone_id = "%s-%s" % (form.cleaned_data["clone_id"],
+                                  repo_utils.get_branch_id(repo))
+            clone_name = "%s: %s" % (form.cleaned_data["clone_name"],
+                                     repo_utils.get_branch_name(repo))
             CloneRepo.delay(clone_id,
                             parent=repo,
-                            name=form.cleaned_data["clone_name"],
+                            name=clone_name,
                             groups=groups,
                             filters=form.cleaned_data['filters'],
                             user=request.user.username)

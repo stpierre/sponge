@@ -5,7 +5,7 @@ from django.forms import widgets
 from sponge.utils import repo as repo_utils
 from sponge.utils import filter as filter_utils
 from sponge.utils import group as group_utils
-from sponge.forms import DisplayWidget, CloneIdWidget
+from sponge.forms import DisplayWidget, CloneWidget
 
 logger = logging.getLogger(__name__)
 
@@ -99,9 +99,12 @@ class RepoCloneForm(RepoEditBase):
                                                    required=False)
         self.fields['clone_id'] = \
             forms.CharField(label="Clone ID",
-                            widget=CloneIdWidget(repo_utils.get_branch_id(self.repo)),
+                            widget=CloneWidget(repo_utils.get_branch_id(self.repo)),
                             help_text="The repository ID of the ultimate ancestor of this repository will be automatically appended")
-        self.fields['clone_name'] = forms.CharField(label="Clone Name")
+        self.fields['clone_name'] = \
+            forms.CharField(label="Clone Name",
+                            widget=CloneWidget(repo_utils.get_branch_name(self.repo), separator=': '),
+                            help_text="The name of the ultimate ancestor of this repository will be automatically appended")
 
 
 class RepoEditForm(RepoEditBase):
