@@ -19,6 +19,8 @@ class TaskExecutionError(Exception):
 class TrackedTask(Task):
     def update(self, msg, state="PROGRESS"):
         logger.info("%s, state=%s" % (msg, state))
+        if state == "ERROR":
+            self.errors.append(msg)
         return self.update_state(state=state, meta=msg)
 
     def __call__(self, *args, **kwargs):
@@ -30,6 +32,7 @@ class TrackedTask(Task):
                                              taskclass=self.__class__.__name__,
                                              owner=user)
             get_pulp_server(user=user)
+        self.errors = []
         return Task.__call__(self, *args, **kwargs)
 
 
@@ -43,13 +46,11 @@ class CreateRepo(TrackedTask):
         if filters is None:
             filters = []
 
-        success = True
         repoapi = RepositoryAPI()
         errors = []
         keylist = repo_utils.get_keylist(gpgkeys, errors=errors)
         for error in errors:
-            self.update(error)
-            success = False
+            self.update(error, state="ERROR")
 
         try:
             repoapi.create(repo_id, name, arch,
@@ -68,7 +69,6 @@ class CreateRepo(TrackedTask):
             repo_utils.sync_foreground(repo_id)
             self.update("Repository %s synced, adding filters" % repo_id)
         except Exception, err:
-            success = False
             self.update("Repository %s failed to sync: %s" % (repo_id, err),
                         state="ERROR")
 
@@ -77,7 +77,6 @@ class CreateRepo(TrackedTask):
         if repo_utils.set_filters(clone, parent['filters'], errors=errors):
             self.update("Filters added to %s" % clone_id)
         else:
-            success = False
             self.update("Error adding filters to %s: %s" % (clone_id,
                                                             ", ".join(errors)),
                         state="ERROR")
@@ -85,14 +84,13 @@ class CreateRepo(TrackedTask):
         errors = []
         if not repo_utils.rebalance_sync_schedule(errors):
             for error in errors:
-                success = False
                 self.update(error, state="ERROR")
 
-        if success:
-            return "Successfully created repo %s" % repo['name']
+        if self.errors:
+            raise TaskExecutionError("Created %s (%s), but encountered errors: %s"
+                                     % (name, repo_id, errors))
         else:
-            raise TaskExecutionError("Created %s (%s), but encountered errors"
-                                     % (name, repo_id))
+            return "Successfully created repo %s" % repo['name']
 
 tasks.register(CreateRepo)
 
@@ -105,15 +103,13 @@ class CloneRepo(TrackedTask):
             filters = []
 
         repoapi = RepositoryAPI()
-        success = True
 
-        # we have to remove the schedule from a repo before we can clone
-        # it
+        # we have to remove the schedule from a repo before we can
+        # clone it
         try:
             schedule = repo_utils.remove_schedule(parent)
             self.update("Removed schedule from %s" % parent['id'])
         except ServerRequestError, err:
-            success = False
             raise TaskExecutionError("Could not remove schedule from %s: %s" %
                                      (parent['id'], err[1]))
 
@@ -122,7 +118,6 @@ class CloneRepo(TrackedTask):
                           relative_path=clone_id)
             self.update("Cloned %s to %s" % (parent['id'], clone_id))
         except ServerRequestError, err:
-            success = False
             repo_utils.restore_schedule(parent, schedule)
             raise TaskExecutionError("Could not clone %s as %s: %s" %
                                      (parent['id'], clone_id, err[1]))
@@ -134,7 +129,6 @@ class CloneRepo(TrackedTask):
                                   errors=errors):
             self.update("Set GPG keys for %s" % clone_id)
         else:
-            success = False
             self.update("Error setting GPG keys for %s: %s" %
                         (clone_id, ", ".join(errors)),
                         state="ERROR")
@@ -143,7 +137,6 @@ class CloneRepo(TrackedTask):
         if repo_utils.set_groups(clone, groups, errors=errors):
             self.update("Set groups for %s" % clone_id)
         else:
-            success = False
             self.update("Error setting groups for %s: %s" % (clone_id,
                                                              ", ".join(errors)),
                         state="ERROR")
@@ -153,7 +146,6 @@ class CloneRepo(TrackedTask):
             self.update("Restored sync schedule %s to %s" % (schedule,
                                                              parent['id']))
         except ServerRequestError, err:
-            success = False
             self.update("Could not restore sync schedule %s to %s: %s" %
                         (schedule, parent['id'], err[1]),
                         state="ERROR")
@@ -162,7 +154,6 @@ class CloneRepo(TrackedTask):
             repo_utils.sync_foreground(clone_id)
             self.update("Repository %s synced, adding filters" % clone_id)
         except Exception, err:
-            success = False
             self.update("Repository %s failed to sync: %s" % (clone_id, err),
                         state="ERROR")
 
@@ -170,7 +161,6 @@ class CloneRepo(TrackedTask):
         if repo_utils.set_filters(clone, parent['filters'], errors=errors):
             self.update("Filters added to %s" % clone_id)
         else:
-            success = False
             self.update("Error adding filters to %s: %s" % (clone_id,
                                                             ", ".join(errors)),
                         state="ERROR")
@@ -178,18 +168,17 @@ class CloneRepo(TrackedTask):
         errors = []
         if not repo_utils.rebalance_sync_schedule(errors):
             for error in errors:
-                success = False
                 self.update(error, state="ERROR")
 
-        if success:
+        if self.errors:
+            raise TaskExecutionError("Cloned %s (%s) to %s (%s), but "
+                                     "encountered errors: %s" %
+                                     (parent['name'], parent['id'],
+                                      name, clone_id, errors))
+        else:
             return "Successfully cloned %s (%s) to %s (%s)" % (parent['name'],
                                                                parent['id'],
                                                                name, clone_id)
-        else:
-            raise TaskExecutionError("Cloned %s (%s) to %s (%s), but "
-                                     "encountered errors" %
-                                     (parent['name'], parent['id'],
-                                      name, clone_id))
 
 tasks.register(CloneRepo)
 
