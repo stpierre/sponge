@@ -92,6 +92,8 @@ def _load_repo_extras(repo, repos=None):
     else:
         repo['next_sync'] = None
 
+    repo['groupid'].sort()
+
 def is_child(repo, repositories=None):
     """ determine if a repository is a child of another repository """
     return getparent(repo, repositories=repositories) is not None
