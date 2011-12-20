@@ -3,6 +3,8 @@
 %{!?python_sitearch: %global python_sitearch %(%{__python} -c "from distutils.sysconfig import get_python_lib; print(get_python_lib(1))")}
 %endif
 
+%global debug_package %{nil}
+
 Summary: Web interface to Pulp
 Name: sponge
 Version: 0.1.3
