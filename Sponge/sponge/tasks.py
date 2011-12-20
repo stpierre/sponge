@@ -196,7 +196,6 @@ tasks.register(CloneRepo)
 
 class SyncRepo(TrackedTask):
     def run(self, repo_id):
-        logger.error("tasks: %s" % registry.tasks.regular().keys())
         try:
             repo_utils.sync_foreground(repo_id)
         except Exception, err:
