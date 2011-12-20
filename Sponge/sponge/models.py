@@ -22,6 +22,7 @@ class CeleryTaskTracker(models.Model):
     taskid = models.CharField(max_length=255)
     taskclass = models.CharField(max_length=255)
     owner = models.CharField(max_length=255)
+    started = models.DateTimeField(auto_now_add=True)
 
 
 class Configuration(models.Model):

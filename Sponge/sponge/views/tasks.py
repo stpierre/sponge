@@ -6,6 +6,7 @@ from sponge.models import CeleryTaskTracker
 from sponge import tasks
 from django.http import HttpResponseRedirect
 from django.core.urlresolvers import reverse
+from pulp.client.api.task import TaskAPI
 
 logger = logging.getLogger(__name__)
 
@@ -23,7 +24,7 @@ def list(request):
 @template("deletetask.html")
 def delete(request, task_id=None):
     taskapi = TaskAPI()
-    task = CeleryTaskTracker.objects.filter(taskid=task_id)
+    task = CeleryTaskTracker.objects.get(taskid=task_id)
     if request.method == 'POST':
         form = DeleteOkayForm(request.POST)
         if form.is_valid():
