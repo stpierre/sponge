@@ -120,4 +120,9 @@ BROKER_VHOST = "/"
 BROKER_USER = "guest"
 BROKER_PASSWORD = "guest"
 
+# set a long time limit so sync tasks don't timeout.  truth be told,
+# this is probably still too short for big repos like Fedora
+# Everything
+CELERYD_TASK_TIME_LIMIT = 3600
+
 sys.path.append(os.path.abspath(os.path.dirname(__file__)))
