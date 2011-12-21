@@ -63,7 +63,7 @@ def _load_repo_extras(repo, repos=None):
             repo['parent'] = repo2
         elif repo2['id'] in repo['clone_ids']:
             repo['children'].append(repo2)
-        elif (repo['id'].endswith(repo2['id']) and
+        elif (repo['id'].endswith(repo2['id']) and repo['source'] and
               repo['source']['url'].endswith("/%s" % repo2['id'])):
             # this check is wonky, but it works with our setup: the
             # child repo's id ends with the parent repo's id, and the
@@ -71,7 +71,7 @@ def _load_repo_extras(repo, repos=None):
             # repo id>.  i'm sure there's a crazy edge case where this
             # is wrong, but it works well enough for now
             repo['parent'] = repo2
-        elif (repo2['id'].endswith(repo['id']) and
+        elif (repo2['id'].endswith(repo['id']) and repo['source'] and
               repo2['source']['url'].endswith("/%s" % repo['id'])):
             repo['children'].append(repo2)
 
@@ -197,26 +197,6 @@ def sort_repos_by_ancestry(repos, parent=None):
             rv.append(repo)
             rv.extend(sort_repos_by_ancestry(repos, parent=repo))
     return rv
-
-def remove_schedule(repo):
-    repoapi = RepositoryAPI()
-    rv = repo['sync_schedule']
-    repoapi.delete_sync_schedule(repo['id'])
-    reload_repo(repo['id'])
-    return rv
-
-def set_schedule(repo, schedule):
-    repoapi = RepositoryAPI()
-    repoapi.change_sync_schedule(repo['id'], dict(schedule=schedule,
-                                                  options=dict()))
-    reload_repo(repo['id'])
-    return repo
-
-def restore_schedule(repo, schedule):
-    if schedule is None:
-        return repo
-    else:
-        return set_schedule(repo, schedule)
 
 def get_branch_id(repo):
     """ get the repo id of a whole branch -- basically, of the
@@ -404,6 +384,7 @@ def rebalance_sync_schedule(errors=None):
         else:
             return 0
 
+    repoapi = RepositoryAPI()
     repos = get_repos()
 
     # get a list of sync frequencies
@@ -489,7 +470,10 @@ def rebalance_sync_schedule(errors=None):
                                                None)
 
             try:
-                set_schedule(repo, schedule)
+                repoapi.change_sync_schedule(repo['id'],
+                                             dict(schedule=schedule,
+                                                  options=dict()))
+                reload_repo(repo['id'])
             except ServerRequestError, err:
                 errors.append("Could not set schedule for %s: %s" %
                               (repo['id'], err[1]))
