@@ -20,10 +20,10 @@ class FilterForm(forms.Form):
         fltr = None
         if "filter" in kwargs:
             fltr = kwargs.pop("filter")
-        kwargs['initial'] = dict(f_id=fltr['id'],
-                                 f_type=fltr['type'],
-                                 desc=fltr['description'],
-                                 patterns="\n".join(fltr['package_list']))
+            kwargs['initial'] = dict(f_id=fltr['id'],
+                                     f_type=fltr['type'],
+                                     desc=fltr['description'],
+                                     patterns="\n".join(fltr['package_list']))
         forms.Form.__init__(self, *args, **kwargs)
         if fltr is not None:
             self.fields["f_id"].widget = DisplayWidget()
