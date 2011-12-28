@@ -7,7 +7,7 @@
 
 Summary: Web interface to Pulp
 Name: sponge
-Version: 0.1.3
+Version: 0.1.4
 Release: 1
 License: Other non-free
 Group: System Tools
