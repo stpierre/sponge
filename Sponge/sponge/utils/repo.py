@@ -375,15 +375,6 @@ def sync_foreground(repo_id):
     return task
 
 def rebalance_sync_schedule(errors=None):
-    def by_package_count(repo1, repo2):
-        """ sort a list of repositories by package_count """
-        if repo1['package_count'] > repo2['package_count']:
-            return 1
-        elif repo1['package_count'] < repo2['package_count']:
-            return -1
-        else:
-            return 0
-
     repoapi = RepositoryAPI()
     repos = get_repos()
 
@@ -404,10 +395,9 @@ def rebalance_sync_schedule(errors=None):
             except KeyError:
                 syncgroups[synctime] = [group]
 
-    # divide the repos up by sync time and sort them by package count
-    # ascending.  this a) puts the repos in the same order every day
-    # so that repos don't go ($synctime * 2 - 1) hours without being
-    # synced; and b) does the heavy lifting early in the morning
+    # divide the repos up by sync time and sort them by inheritance,
+    # reversed, to ensure that children get synced before parents and
+    # a package doesn't just go straight to the final child
     cycles = dict() # dict of repo -> sync time
     for repo in repos.values():
         cycles[repo['id']] = default
@@ -428,7 +418,7 @@ def rebalance_sync_schedule(errors=None):
             syncs[synctime] = [repos[repoid]]
 
     for synctime, syncrepos in syncs.items():
-        syncrepos.sort(by_package_count)
+        syncrepos = sort_repos_by_ancestry(syncrepos)
         syncrepos.reverse()
 
         # we count the total number of packages in all repos, and
