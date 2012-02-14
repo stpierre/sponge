@@ -63,15 +63,12 @@ def _load_repo_extras(repo, repos=None):
             repo['parent'] = repo2
         elif repo2['id'] in repo['clone_ids']:
             repo['children'].append(repo2)
-        elif (repo['id'].endswith(repo2['id']) and repo['source'] and
+        elif (repo['source'] and repo['source']['type'] == 'local' and
               repo['source']['url'].endswith("/%s" % repo2['id'])):
-            # this check is wonky, but it works with our setup: the
-            # child repo's id ends with the parent repo's id, and the
-            # child syncs from a local repo that ends with /<parent
-            # repo id>.  i'm sure there's a crazy edge case where this
-            # is wrong, but it works well enough for now
+            # the child syncs from a local repo that ends with
+            # /<parent repo id>
             repo['parent'] = repo2
-        elif (repo2['id'].endswith(repo['id']) and repo['source'] and
+        elif (repo2['source'] and repo2['source']['type'] == 'local' and
               repo2['source']['url'].endswith("/%s" % repo['id'])):
             repo['children'].append(repo2)
 
