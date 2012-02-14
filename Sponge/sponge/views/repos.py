@@ -389,8 +389,10 @@ def diff(request, repo_id=None, repo_id2=None):
     
     repo1 = repo_utils.get_repo(repo_id)
     repo2 = repo_utils.get_repo(repo_id2)
-    packages1 = dict([(p['name'], p) for p in repoapi.packages(repo_id)])
-    packages2 = dict([(p['name'], p) for p in repoapi.packages(repo_id2)])
+    packages1 = dict([("%s.%s" % (p['name'], p['arch']), p)
+                      for p in repoapi.packages(repo_id)])
+    packages2 = dict([("%s.%s" % (p['name'], p['arch']), p)
+                      for p in repoapi.packages(repo_id2)])
     pkg_names = set(packages1.keys() + packages2.keys())
     allpackages = dict()
     for pkg in pkg_names:
