@@ -105,7 +105,7 @@ def delete(request, filter_id=None):
                     HttpResponseRedirect(reverse('sponge.views.filters.list'))
             except ServerRequestError, err:
                 messages.error(request,
-                               "Failed to delete filter %s (%s): %s"
+                               "Failed to delete filter %s (%s): %s" %
                                (fltr['description'], fltr['id'], err[1]))
     return dict(filter=fltr,
                 form=DeleteOkayForm(dict(id=filter_id)))
