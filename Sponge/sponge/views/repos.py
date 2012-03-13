@@ -256,7 +256,7 @@ def promote_package(request, repo_id=None, package=None):
     pkgid = package
     package = repo_utils.get_package(repo, id=pkgid)
     if len(repo['children']) > 1:
-        children = [(r['id'], r['name']) for r in repo.children]
+        children = [(r['id'], r['name']) for r in repo['children']]
         form = PromoteRepoSelectionForm(request.POST or None, repos=children)
         if request.method == 'POST':
             pset = PackageSet.objects.create(stype="promote")
