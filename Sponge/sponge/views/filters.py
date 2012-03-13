@@ -97,7 +97,7 @@ def delete(request, filter_id=None):
         form = DeleteOkayForm(request.POST)
         if form.is_valid():
             try:
-                filterapi.delete(filter_id, False)
+                filterapi.delete(filter_id)
                 messages.success(request,
                                  "Deleted filter %s (%s)" %
                                  (fltr['description'], fltr['id']))
