@@ -66,9 +66,9 @@ def view(request, repo_id=None):
             if success:
                 messages.success(request, "Updated repository %s" % repo['id'])
             else:
-                messages.warn(request,
-                              "Errors encountered while updating repository %s"
-                              % repo['id'])
+                messages.warning(request,
+                                 "Errors encountered while updating repository "
+                                 "%s" % repo['id'])
             repo = repo_utils.reload_repo(repo['id'])
     elif request.method == 'POST' and "diffselect" in request.POST:
         if diffform.is_valid():
