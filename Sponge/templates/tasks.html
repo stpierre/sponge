@@ -6,6 +6,7 @@
 {% block tablehead %}
 <th>Task ID</th>
 <th>Task Type</th>
+<th>Repository</th>
 <th>Status</th>
 <th>Started</th>
 <th>Actions</th>
@@ -15,13 +16,14 @@
 {% for task in tasks %}
   <tr class="{% cycle "odd" "even" %}">
     <td>{{ task.id }}</td>
-    <td>{{ task.tclass }}</td>
-    <td>{{ task.status.state }}
-      {% if task.status.info %}: {{ task.status.info }}{% endif %}
-    </td>
+    <td>{{ task.command }}</td>
+    <td><a href="{% url sponge.views.repos.view repo_id=task.repo %}">{{ task.repo }}</a></td>
+    <td>{{ task.status }}</td>
     <td>{{ task.started|date:"SHORT_DATETIME_FORMAT" }}</td>
     <td class="actions">
-      <a href="{% url sponge.views.tasks.delete task_id=task.id %}">cancel</a>
+      {% if task.type == "sponge" or task.type == "pulp" %}
+        <a href="{% url sponge.views.tasks.delete task_id=task.id %}">cancel</a>
+      {% endif %}
     </td>
   </tr>
 {% endfor %}

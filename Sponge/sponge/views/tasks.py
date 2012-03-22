@@ -1,5 +1,5 @@
 import logging
-from sponge.utils import messages
+from sponge.utils import messages, repo as repo_utils
 from sponge.utils.decorators import template
 from sponge.forms import DeleteOkayForm
 from sponge.models import CeleryTaskTracker
@@ -7,23 +7,54 @@ from sponge import tasks
 from django.http import HttpResponseRedirect
 from django.core.urlresolvers import reverse
 from pulp.client.api.task import TaskAPI
+from pulp.common.dateutils import parse_iso8601_datetime
 
 logger = logging.getLogger(__name__)
 
 @template("tasks.html")
 def list(request):
+    taskapi = TaskAPI()
     tasktable = []
-    tasklist = CeleryTaskTracker.objects.filter(owner=request.user.username)
-    for task in tasklist:
+    for task in CeleryTaskTracker.objects.filter(owner=request.user.username):
         tclass = getattr(tasks, task.taskclass)
+        status = tclass.AsyncResult(task.taskid)
+        stat_str = status.state
+        if status.info:
+            stat_str += ": %s" % status.info
         tasktable.append(dict(id=task.taskid,
-                              tclass=task.taskclass,
-                              status=tclass.AsyncResult(task.taskid)))
+                              command=task.taskclass,
+                              status=stat_str,
+                              repo=None,
+                              type='sponge'))
+    pulp_tasks = taskapi.list()
+    if pulp_tasks:
+        repos = repo_utils.get_repos()
+        for task in taskapi.list():
+            if task['start_time'] is not None and task['state'] != 'finished':
+                status = task['state']
+                command = task['method_name'].lstrip("_")
+                if task['exception']:
+                    status += ": " + task['exception']
+                if task['scheduler'] == 'interval':
+                    ttype = task['scheduler']
+                    command = "Scheduled %s" % command
+                else:
+                    ttype = 'pulp'
+                repo = None
+                for arg in task['args']:
+                    if arg in repos:
+                        repo = arg
+                        break
+                tasktable.append(dict(id=task['id'],
+                                      command=command,
+                                      status=status,
+                                      repo=repo,
+                                      started=parse_iso8601_datetime(task['start_time']),
+                                      type=ttype))
     return dict(tasks=tasktable)
 
 @template("deletetask.html")
 def delete(request, task_id=None):
-    taskapi = TaskAPI()
     task = CeleryTaskTracker.objects.get(taskid=task_id)
     if request.method == 'POST':
         form = DeleteOkayForm(request.POST)
