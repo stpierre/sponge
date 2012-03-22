@@ -1,8 +1,8 @@
 {% extends "formbase.html" %}
-{% block title %}Delete task {{ task.taskid }}{% endblock %}
-{% block pagetitle %}Delete task {{ task.taskid }}{% endblock %}
+{% block title %}Delete task {{ task_id }}{% endblock %}
+{% block pagetitle %}Delete task {{ task_id }}{% endblock %}
 
-{% block formdescription %}The task "{{ task.taskid }}" ({{ task.taskclass }}) will be deleted.{% endblock %}
+{% block formdescription %}The task "{{ task_id }}" ({{ command }}) will be deleted.{% endblock %}
 
 {% block formsubmit %}Delete{% endblock %}
 {% block formcancelurl %}{% url sponge.views.tasks.list %}{% endblock %}

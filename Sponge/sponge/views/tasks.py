@@ -55,17 +55,38 @@ def list(request):
 
 @template("deletetask.html")
 def delete(request, task_id=None):
-    task = CeleryTaskTracker.objects.get(taskid=task_id)
-    if request.method == 'POST':
-        form = DeleteOkayForm(request.POST)
-        if form.is_valid():
-            tclass = getattr(tasks, task.taskclass)
-            status = tclass.AsyncResult(task.taskid)
-            task.delete()
-            status.forget()
-            messages.success(request,
-                             "Deleted task %s (%s)" % (task.taskid,
-                                                       task.taskclass))
+    # figure out if this is a pulp task or a sponge task
+    taskapi = TaskAPI()
+    task = taskapi.info(task_id)
+    if task is not None:
+        command = task['method_name'].lstrip("_")
+        if task['scheduler'] == 'interval':
+            command = "Scheduled %s" % command
+        
+        if request.method == 'POST':
+            form = DeleteOkayForm(request.POST)
+            if form.is_valid():
+                taskapi.cancel(task_id)
+                messages.success(request,
+                                 "Deleted task %s (%s)" % (task_id, command))
             return HttpResponseRedirect(reverse('sponge.views.tasks.list'))
-    return dict(task=task,
-                form=DeleteOkayForm(dict(id=task_id)))
+        return dict(task_id=task_id,
+                    command=command,
+                    form=DeleteOkayForm(dict(id=task_id)))
+    else:
+        # must be a sponge task
+        task = CeleryTaskTracker.objects.get(taskid=task_id)
+        if request.method == 'POST':
+            form = DeleteOkayForm(request.POST)
+            if form.is_valid():
+                tclass = getattr(tasks, task.taskclass)
+                status = tclass.AsyncResult(task.taskid)
+                task.delete()
+                status.forget()
+                messages.success(request,
+                                 "Deleted task %s (%s)" % (task.taskid,
+                                                           task.taskclass))
+            return HttpResponseRedirect(reverse('sponge.views.tasks.list'))
+        return dict(task_id=task.taskid,
+                    command=task.taskclass,
+                    form=DeleteOkayForm(dict(id=task_id)))
